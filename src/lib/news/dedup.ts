@@ -23,10 +23,14 @@ function titleSimilarity(a: string, b: string): number {
   if (wordsA.size === 0 || wordsB.size === 0) return 0;
 
   let intersection = 0;
-  for (const w of wordsA) {
-    if (wordsB.has(w)) intersection++;
-  }
-  const union = new Set([...wordsA, ...wordsB]).size;
+wordsA.forEach((w) => {
+  if (wordsB.has(w)) intersection++;
+});
+
+const unionSet = new Set<string>();
+wordsA.forEach((w) => unionSet.add(w));
+wordsB.forEach((w) => unionSet.add(w));
+const union = unionSet.size;
   return intersection / union;
 }
 
