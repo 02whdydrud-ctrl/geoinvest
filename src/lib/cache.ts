@@ -46,13 +46,14 @@ export const cache = {
   purgeExpired(): number {
     let purged = 0;
     const now = Date.now();
-    for (const [key, entry] of store) {
-      if (now > entry.expiresAt) {
-        store.delete(key);
-        purged++;
-      }
-    }
-    return purged;
+    store.forEach((entry, key) => {
+  if (now > entry.expiresAt) {
+    store.delete(key);
+    purged++;
+  }
+});
+
+return purged;
   },
 };
 
