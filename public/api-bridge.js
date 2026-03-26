@@ -152,27 +152,30 @@ function getTimeAgo(isoStr) {
 // ─── 4. 리스크 게이지 업데이트 ───
 
 function updateGauge(score) {
+  // 새 대시보드의 updateGaugeColor 함수 호출 (dashboard.html에 정의됨)
+  if (typeof updateGaugeColor === 'function') {
+    updateGaugeColor(score);
+    return;
+  }
+  // 폴백
   const circle = document.getElementById('gCircle');
-  const numEl = document.querySelector('.g-num');
-  const statusEl = document.querySelector('.g-status');
+  const numEl = document.getElementById('gNum') || document.querySelector('.g-num');
+  const statusEl = document.getElementById('gStatus') || document.querySelector('.g-status');
 
   if (numEl) numEl.textContent = String(score);
 
   if (circle) {
-    // stroke-dasharray=264, offset = 264 * (1 - score/100)
     const offset = 264 * (1 - score / 100);
     circle.style.strokeDashoffset = String(offset);
-
-    // 색상 변경
-    if (score >= 70) circle.style.stroke = '#ff4757';
-    else if (score >= 40) circle.style.stroke = '#ffa502';
-    else circle.style.stroke = '#2ed573';
+    if (score >= 70) { circle.style.stroke = '#ff4757'; if(numEl) numEl.style.color = '#ff4757'; }
+    else if (score >= 30) { circle.style.stroke = '#ffa502'; if(numEl) numEl.style.color = '#ffa502'; }
+    else { circle.style.stroke = '#2ed573'; if(numEl) numEl.style.color = '#2ed573'; }
   }
 
   if (statusEl) {
-    if (score >= 70) { statusEl.textContent = '⚠ 고위험 구간'; statusEl.style.color = '#ff4757'; }
-    else if (score >= 40) { statusEl.textContent = '◆ 주의 구간'; statusEl.style.color = '#ffa502'; }
-    else { statusEl.textContent = '✓ 안정 구간'; statusEl.style.color = '#2ed573'; }
+    if (score >= 70) { statusEl.textContent = '⚠ High Risk'; statusEl.style.color = '#ff4757'; }
+    else if (score >= 30) { statusEl.textContent = '◆ Moderate Risk'; statusEl.style.color = '#ffa502'; }
+    else { statusEl.textContent = '✓ Low Risk'; statusEl.style.color = '#2ed573'; }
   }
 }
 
