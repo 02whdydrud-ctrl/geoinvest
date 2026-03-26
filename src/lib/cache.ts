@@ -1,15 +1,10 @@
 // ═══════════════════════════════════════════
-//  캐시 레이어
-//  - 기본: 인메모리 Map (단일 인스턴스용)
-//  - 프로덕션: Cloudflare Workers KV로 교체 가능
+//  캐시 레이어 v2 — Supabase 기반
+//  Vercel 서버리스 환경에서 인스턴스 간 공유 가능
+//  인터페이스는 기존과 동일 (drop-in replacement)
 // ═══════════════════════════════════════════
 
-interface CacheEntry<T> {
-  data: T;
-  expiresAt: number;
-}
-
-const store = new Map<string, CacheEntry<unknown>>();
+import { supabase } from './supabase';
 
 /** 기본 TTL: 5분 */
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
@@ -17,42 +12,61 @@ const DEFAULT_TTL_MS = 5 * 60 * 1000;
 export const cache = {
   /**
    * 캐시에서 값 조회
-   * 만료됐으면 null 반환 + 자동 삭제
+   * 만료됐거나 없으면 null 반환
    */
   async get<T>(key: string): Promise<T | null> {
-    const entry = store.get(key) as CacheEntry<T> | undefined;
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) {
-      store.delete(key);
+    try {
+      const { data, error } = await supabase
+        .from('cache')
+        .select('data, expires_at')
+        .eq('key', key)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data.data as T;
+    } catch {
+      // 캐시 오류는 조용히 무시 (fetcher 폴백)
       return null;
     }
-    return entry.data;
   },
 
   /**
-   * 캐시에 값 저장
+   * 캐시에 값 저장 (UPSERT)
    * @param ttlMs 유효 시간 (밀리초). 기본 5분.
    */
   async set<T>(key: string, data: T, ttlMs = DEFAULT_TTL_MS): Promise<void> {
-    store.set(key, { data, expiresAt: Date.now() + ttlMs });
+    try {
+      const expiresAt = new Date(Date.now() + ttlMs).toISOString();
+      await supabase
+        .from('cache')
+        .upsert({ key, data, expires_at: expiresAt, created_at: new Date().toISOString() });
+    } catch {
+      // 캐시 저장 실패는 조용히 무시
+    }
   },
 
   /** 캐시 항목 삭제 */
   async del(key: string): Promise<void> {
-    store.delete(key);
+    try {
+      await supabase.from('cache').delete().eq('key', key);
+    } catch {
+      // 무시
+    }
   },
 
-  /** 만료된 항목 일괄 정리 (주기적 호출 권장) */
-  purgeExpired(): number {
-    let purged = 0;
-    const now = Date.now();
-    store.forEach((entry, key) => {
-      if (now > entry.expiresAt) {
-        store.delete(key);
-        purged++;
-      }
-    });
-    return purged;
+  /** 만료된 항목 일괄 정리 */
+  async purgeExpired(): Promise<number> {
+    try {
+      const { count } = await supabase
+        .from('cache')
+        .delete()
+        .lt('expires_at', new Date().toISOString())
+        .select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 };
 

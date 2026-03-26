@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { runPipeline } from '@/lib/news/pipeline';
+import { cache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Vercel: 최대 60초 (Pro 플랜)
@@ -20,6 +21,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await runPipeline();
+
+    // 파이프라인 완료 후 캐시 무효화 → 다음 요청에서 최신 데이터 즉시 반영
+    await Promise.all([
+      cache.del('home'),
+      cache.del('recent-articles-context'),
+      cache.purgeExpired(),
+    ]);
 
     return NextResponse.json({
       success: true,
