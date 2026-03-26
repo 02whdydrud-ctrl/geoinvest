@@ -31,7 +31,7 @@ async function loadHome() {
 
     // 리스크 게이지 업데이트
     if (data.riskIndex != null) {
-      updateGauge(data.riskIndex);
+      updateGauge(data.riskIndex, data.riskDelta ?? null);
     }
 
     // 알림 업데이트
@@ -151,16 +151,17 @@ function getTimeAgo(isoStr) {
 
 // ─── 4. 리스크 게이지 업데이트 ───
 
-function updateGauge(score) {
+function updateGauge(score, delta) {
   // 새 대시보드의 updateGaugeColor 함수 호출 (dashboard.html에 정의됨)
   if (typeof updateGaugeColor === 'function') {
-    updateGaugeColor(score);
+    updateGaugeColor(score, delta);
     return;
   }
   // 폴백
   const circle = document.getElementById('gCircle');
   const numEl = document.getElementById('gNum') || document.querySelector('.g-num');
   const statusEl = document.getElementById('gStatus') || document.querySelector('.g-status');
+  const deltaEl = document.getElementById('gDelta') || document.querySelector('.g-delta');
 
   if (numEl) numEl.textContent = String(score);
 
@@ -176,6 +177,22 @@ function updateGauge(score) {
     if (score >= 70) { statusEl.textContent = '⚠ 위험 높음'; statusEl.style.color = '#e03e3e'; }
     else if (score >= 30) { statusEl.textContent = '◆ 보통'; statusEl.style.color = '#d4880f'; }
     else { statusEl.textContent = '✓ 안전'; statusEl.style.color = '#0a8a3e'; }
+  }
+
+  // 어제 대비 변화 표시
+  if (deltaEl && delta != null) {
+    const abs = Math.abs(delta);
+    if (delta > 0) {
+      deltaEl.textContent = `▲ +${abs} 어제보다`;
+      deltaEl.style.color = '#e03e3e';
+    } else if (delta < 0) {
+      deltaEl.textContent = `▼ ${delta} 어제보다`;
+      deltaEl.style.color = '#0a8a3e';
+    } else {
+      deltaEl.textContent = '— 어제와 동일';
+      deltaEl.style.color = '#8b949e';
+    }
+    deltaEl.style.display = 'block';
   }
 }
 

@@ -61,6 +61,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);backdr
 .g-info{display:flex;flex-direction:column;gap:4px;}
 .g-title{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1px;}
 .g-status{font-size:13px;font-weight:700;}.g-trend{font-size:11px;color:var(--text2);}
+.g-delta{font-size:11px;font-weight:600;margin-top:3px;}
 
 /* ── 주요 분쟁 지역 (위험도 상위 4개) ── */
 .danger-section{margin-bottom:10px;}
@@ -249,7 +250,7 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24p
       <div class="g-info">
         <div class="g-title">글로벌 리스크 지수</div>
         <div class="g-status" id="gStatus">⚠ 위험 높음</div>
-        <div class="g-trend" id="gTrend">추세: 유지</div>
+        <div class="g-delta" id="gDelta" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -420,7 +421,7 @@ function tick(){document.getElementById('lastUpdate').textContent=new Date().toL
 setInterval(tick,1000);tick();
 
 // ── 리스크 게이지 ──
-function updateGaugeColor(score){var el=document.getElementById('gNum');var circle=document.getElementById('gCircle');var status=document.getElementById('gStatus');if(el)el.textContent=score;if(circle){circle.style.strokeDashoffset=264*(1-score/100);if(score>=70){circle.style.stroke='#e03e3e';el.style.color='#e03e3e';}else if(score>=30){circle.style.stroke='#d4880f';el.style.color='#d4880f';}else{circle.style.stroke='#0a8a3e';el.style.color='#0a8a3e';}}if(status){if(score>=70){status.textContent='⚠ 위험 높음';status.style.color='#e03e3e';}else if(score>=30){status.textContent='◆ 보통';status.style.color='#d4880f';}else{status.textContent='✓ 안전';status.style.color='#0a8a3e';}}}
+function updateGaugeColor(score,delta){var el=document.getElementById('gNum');var circle=document.getElementById('gCircle');var status=document.getElementById('gStatus');var deltaEl=document.getElementById('gDelta');if(el)el.textContent=score;if(circle){circle.style.strokeDashoffset=264*(1-score/100);if(score>=70){circle.style.stroke='#e03e3e';el.style.color='#e03e3e';}else if(score>=30){circle.style.stroke='#d4880f';el.style.color='#d4880f';}else{circle.style.stroke='#0a8a3e';el.style.color='#0a8a3e';}}if(status){if(score>=70){status.textContent='⚠ 위험 높음';status.style.color='#e03e3e';}else if(score>=30){status.textContent='◆ 보통';status.style.color='#d4880f';}else{status.textContent='✓ 안전';status.style.color='#0a8a3e';}}if(deltaEl&&delta!=null){var abs=Math.abs(delta);if(delta>0){deltaEl.textContent='▲ +'+abs+' 어제보다';deltaEl.style.color='#e03e3e';}else if(delta<0){deltaEl.textContent='▼ '+delta+' 어제보다';deltaEl.style.color='#0a8a3e';}else{deltaEl.textContent='— 어제와 동일';deltaEl.style.color='#8b949e';}deltaEl.style.display='block';}}
 
 // ── 좌측 네비게이션 토글 ──
 function toggleNav(){

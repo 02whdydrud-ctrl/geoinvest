@@ -67,6 +67,7 @@ export interface HomeResponse {
   signals: Signal[];
   articles: Article[];
   riskIndex: number;
+  riskDelta: number | null;   // 어제 대비 변화 (null = 비교 불가)
   marketData: MarketTick[];
   alerts: AlertItem[];
   updatedAt: string;

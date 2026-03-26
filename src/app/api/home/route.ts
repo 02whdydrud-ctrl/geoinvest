@@ -29,13 +29,41 @@ export async function GET() {
 
       const arts = (articles ?? []) as Article[];
 
-      // 리스크 지수 계산
-      const scores = arts
-        .filter((a) => a.impact_score != null)
+      // 오늘 / 어제 날짜 범위 계산 (UTC 기준)
+      const now = new Date();
+      const todayStart = new Date(now);
+      todayStart.setUTCHours(0, 0, 0, 0);
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
+
+      // 오늘 기사 impact_score 평균 → riskIndex
+      const todayScores = arts
+        .filter((a) => a.impact_score != null && new Date(a.published_at) >= todayStart)
         .map((a) => a.impact_score!);
-      const riskIndex = scores.length > 0
-        ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
-        : 50;
+      const riskIndex = todayScores.length > 0
+        ? Math.round(todayScores.reduce((s, v) => s + v, 0) / todayScores.length)
+        : (() => {
+            // 오늘 기사 없으면 전체 최신 20건 평균
+            const allScores = arts.filter((a) => a.impact_score != null).map((a) => a.impact_score!);
+            return allScores.length > 0
+              ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length)
+              : 50;
+          })();
+
+      // 어제 기사 impact_score 평균 → riskDelta 계산
+      const { data: yesterdayArticles } = await supabase
+        .from('articles')
+        .select('impact_score')
+        .gte('published_at', yesterdayStart.toISOString())
+        .lt('published_at', todayStart.toISOString())
+        .not('impact_score', 'is', null);
+
+      let riskDelta: number | null = null;
+      if (yesterdayArticles && yesterdayArticles.length > 0) {
+        const yScores = yesterdayArticles.map((a: { impact_score: number }) => a.impact_score);
+        const yesterdayIndex = Math.round(yScores.reduce((s: number, v: number) => s + v, 0) / yScores.length);
+        riskDelta = riskIndex - yesterdayIndex;
+      }
 
       // 알림 (상위 5건)
       const alerts = arts.slice(0, 5).map((a) => ({
@@ -51,6 +79,7 @@ export async function GET() {
         signals: signals ?? [],
         articles: arts,
         riskIndex,
+        riskDelta,
         marketData: [],
         alerts,
         updatedAt: new Date().toISOString(),
