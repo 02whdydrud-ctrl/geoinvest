@@ -180,6 +180,69 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24p
 .cp-caution{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
 .cp-watch{background:rgba(212,136,15,.08);color:var(--yellow);border:1px solid rgba(212,136,15,.2);}
 .box-header{padding:11px 14px;border-bottom:1px solid var(--border);font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);letter-spacing:.5px;font-weight:700;}
+
+/* ── 모바일 반응형 (≤600px) ── */
+@media(max-width:600px){
+  /* 헤더 */
+  .last-update{display:none;}
+  header{padding:0 12px 0 6px;}
+
+  /* 히어로 */
+  .hero{padding:16px 14px 0;}
+  .hero-top{gap:14px;}
+  .hero-text h1{font-size:19px;}
+  .hero-text p{font-size:12px;}
+  .hero-gauge{padding:12px 14px;gap:12px;}
+  .g-ring{width:64px;height:64px;}
+  .g-ring svg{width:64px;height:64px;}
+  .g-num{font-size:18px;}
+
+  /* 메인 패딩 */
+  main{padding:10px 14px 24px;}
+
+  /* 검색바 */
+  .search{width:auto;flex:1;min-width:0;}
+  .ph{gap:8px;}
+
+  /* AI 프리셋 스크롤 */
+  .presets{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+  .presets::-webkit-scrollbar{display:none;}
+  .pre{flex-shrink:0;}
+
+  /* 뉴스 */
+  .n-title{font-size:12px;}
+  .n-impact{font-size:9px;overflow-x:auto;}
+  .n-ic{padding:7px 8px;}
+  .n-ic-lbl{font-size:7px;}
+
+  /* 시그널 카드 */
+  .signal-headline{font-size:13px;}
+
+  /* 분쟁 지역 카드 */
+  .dc-name{font-size:13px;}
+  .dc-reason{font-size:10px;}
+
+  /* 섹션 레이블 */
+  .section-label{font-size:8px;}
+
+  /* 속보 티커 */
+  .ticker-lbl{font-size:8px;padding:0 10px;}
+  .ti{font-size:10px;}
+
+  /* 지역 필터 */
+  .rc{padding:9px 8px;}
+  .rc-name{font-size:10px;}
+  .rc-sub{font-size:8px;}
+}
+
+/* ── 초소형 화면 (≤360px, Galaxy S 시리즈 등) ── */
+@media(max-width:360px){
+  .hero-text h1{font-size:17px;}
+  .logo-text{font-size:15px;}
+  .hero-gauge{flex-direction:column;align-items:flex-start;gap:8px;}
+  .signals-grid{grid-template-columns:1fr;}
+  .danger-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
