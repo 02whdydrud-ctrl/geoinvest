@@ -120,7 +120,7 @@ function renderNewsFromAPI(articles) {
           <span class="n-time">${timeAgo}</span>
         </div>
         <div class="n-title">${a.title}</div>
-        ${a.summary ? `<div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.6;">${a.summary}</div>` : ''}
+        ${a.summary ? `<div class="n-summary"><span class="n-summary-lbl">AI 요약</span><span class="n-summary-txt">${a.summary}</span></div>` : ''}
         <div class="n-impact">
           <div class="n-ic">
             <div class="n-ic-lbl lbl-g">▲ 수혜</div>
