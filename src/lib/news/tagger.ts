@@ -159,8 +159,8 @@ export function tagArticle(article: RawArticle): TagResult {
   }
 
   // 중복 제거
-  allGain = [...new Set(allGain)];
-  allLoss = [...new Set(allLoss)];
+  allGain = Array.from(new Set(allGain));
+allLoss = Array.from(new Set(allLoss));
 
   // 3) 임팩트 스코어 — 단순 키워드 밀도 기반 (0-100)
   const totalKeywords = REGION_RULES.flatMap((r) => r.keywords).length +
