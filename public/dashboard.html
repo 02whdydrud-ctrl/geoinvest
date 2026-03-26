@@ -3,682 +3,664 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoInvest — 지정학 리스크 대시보드</title>
+<title>GeoInvest — 지정학 리스크</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* ── 색상 변수 ── */
-:root{--bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f5;--border:#e1e4e8;--border2:#d0d7de;--accent:#0066cc;--accent2:#e8f0fe;--red:#e03e3e;--green:#0a8a3e;--yellow:#d4880f;--text:#1f2328;--text2:#656d76;--text3:#8b949e;--glow:rgba(0,102,204,.08);--nav-w:240px;}
+/* ═══ Design Tokens ═══ */
+:root{
+  --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f5;
+  --border:#e1e4e8;--border2:#d0d7de;
+  --accent:#1a6dcc;--accent2:#e8f0fe;
+  --red:#d93025;--red-bg:#fce8e6;--red-border:#f5c6c2;
+  --orange:#e8710a;--orange-bg:#fef3e5;--orange-border:#f9d9a8;
+  --yellow:#d4880f;--yellow-bg:#fef7e0;
+  --green:#188038;--green-bg:#e6f4ea;--green-border:#b7e1c5;
+  --text:#1f2328;--text2:#5f6368;--text3:#9aa0a6;
+  --sidebar-w:220px;
+  --header-h:52px;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
 
-/* ── 헤더 ── */
-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px 0 8px;height:54px;display:flex;align-items:center;justify-content:space-between;}
-.hamburger{background:none;border:none;cursor:pointer;padding:8px;color:var(--text2);display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s;flex-shrink:0;}.hamburger:hover{background:var(--surface2);}
-.logo{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-weight:700;font-size:17px;color:var(--accent);cursor:pointer;text-decoration:none;user-select:none;transition:opacity .15s;}.logo:hover{opacity:.75;}
-.logo-globe{color:var(--accent);flex-shrink:0;}
-.logo-text{display:flex;align-items:center;gap:6px;}
-.logo-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 1.2s infinite;flex-shrink:0;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
-.header-right{display:flex;align-items:center;gap:10px;}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(224,62,62,.08);border:1px solid rgba(224,62,62,.2);color:var(--red);font-size:10px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;padding:4px 9px;border-radius:4px;}
-.live-dot{width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1s infinite;}
-.last-update{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);}.last-update span{color:var(--text2);}
+/* ═══ Sidebar (Weather Channel style — persistent on desktop) ═══ */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;transition:transform .25s ease;}
+.sb-logo{padding:14px 18px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);height:var(--header-h);}
+.sb-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;font-family:'Space Mono',monospace;}
+.sb-logo-txt{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text);}
+.sb-logo-txt span{color:var(--accent);}
+.sb-nav{flex:1;padding:8px 0;overflow-y:auto;}
+.sb-section{font-size:10px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;padding:16px 18px 6px;display:block;}
+.sb-item{display:flex;align-items:center;gap:11px;padding:10px 18px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .12s;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif;border-left:3px solid transparent;}
+.sb-item:hover{background:var(--surface2);color:var(--text);}
+.sb-item.active{background:var(--accent2);color:var(--accent);font-weight:600;border-left-color:var(--accent);}
+.sb-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.sb-badge{margin-left:auto;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);}
+.sb-divider{height:1px;background:var(--border);margin:8px 0;}
+.sb-footer{padding:14px 18px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
 
-/* ── 좌측 네비게이션 슬라이드 패널 ── */
-.nav-overlay{display:none;position:fixed;inset:0;z-index:89;background:rgba(0,0,0,.18);animation:fadeIn .2s ease;}
-.nav-overlay.on{display:block;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-.nav-sidebar{position:fixed;top:54px;left:0;bottom:0;width:var(--nav-w);background:var(--surface);border-right:1px solid var(--border);z-index:90;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:8px 0 24px;}
-.nav-sidebar.open{transform:translateX(0);}
-.nav-section-lbl{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;padding:14px 16px 5px;display:block;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--text);cursor:pointer;transition:background .12s;text-decoration:none;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif;}
-.nav-item:hover{background:var(--surface2);color:var(--accent);}
-.nav-item.active{background:var(--accent2);color:var(--accent);font-weight:700;}
-.nav-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center;}
-.nav-divider{height:1px;background:var(--border);margin:8px 0;}
-.nav-risk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto;}
-.dot-h{background:var(--red);}.dot-m{background:var(--yellow);}.dot-l{background:var(--green);}
+/* ═══ Header (mobile only) ═══ */
+.mobile-header{display:none;position:sticky;top:0;z-index:99;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:var(--header-h);padding:0 16px;align-items:center;justify-content:space-between;}
+.mob-hamburger{background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);display:flex;align-items:center;}
+.mob-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;color:var(--text);}
+.mob-logo span{color:var(--accent);}
+.mob-live{font-size:9px;font-family:'Space Mono',monospace;color:var(--red);font-weight:700;letter-spacing:1px;}
 
-/* ── 속보 티커 ── */
-.ticker{border-bottom:1px solid var(--border);display:flex;align-items:stretch;overflow:hidden;position:relative;z-index:1;background:var(--surface);}
-.ticker-lbl{background:#1f2328;color:#fff;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1.5px;white-space:nowrap;padding:0 14px;display:flex;align-items:center;flex-shrink:0;}
-.ticker-scroll{flex:1;overflow:hidden;padding:7px 0;display:flex;align-items:center;}
-.ticker-track{display:flex;gap:28px;animation:scroll 32s linear infinite;white-space:nowrap;}
-@keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-.ti{font-size:11px;font-family:'Space Mono',monospace;}.ti-r{color:var(--red);}.ti-g{color:var(--green);}.ti-y{color:var(--yellow);}
+/* ═══ Main Content ═══ */
+.main{margin-left:var(--sidebar-w);min-height:100vh;}
 
-/* ── 히어로 영역 ── */
-.hero{position:relative;z-index:1;padding:28px 28px 0;max-width:1440px;margin:0 auto;}
-.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:22px;}
-@media(max-width:800px){.hero-top{flex-direction:column;}}
-.hero-text h1{font-size:24px;font-weight:900;line-height:1.3;margin-bottom:5px;letter-spacing:-.5px;color:var(--text);}.hero-text h1 em{color:var(--accent);font-style:normal;}
-.hero-text p{font-size:13px;color:var(--text2);line-height:1.6;}
-.hero-gauge{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.g-ring{position:relative;width:76px;height:76px;}.g-ring svg{transform:rotate(-90deg);}
-.g-bg{fill:none;stroke:var(--border);stroke-width:7;}.g-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease,stroke .5s ease;}
-.g-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.g-num{font-family:'Space Mono',monospace;font-size:21px;font-weight:700;line-height:1;}.g-unit{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;}
-.g-info{display:flex;flex-direction:column;gap:4px;}
-.g-title{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1px;}
-.g-status{font-size:13px;font-weight:700;}.g-trend{font-size:11px;color:var(--text2);}
-.g-delta{font-size:11px;font-weight:600;margin-top:3px;}
+/* ── Alert Banner ── */
+.alert-banner{background:var(--red-bg);border-bottom:1px solid var(--red-border);padding:10px 28px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--red);font-weight:500;}
+.alert-banner.warn{background:var(--orange-bg);border-bottom-color:var(--orange-border);color:var(--orange);}
+.alert-icon{font-size:16px;flex-shrink:0;}
+.alert-text{flex:1;line-height:1.5;}.alert-text strong{font-weight:700;}
+.alert-dismiss{background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:16px;padding:4px;}.alert-dismiss:hover{opacity:1;}
 
-/* ── 리스크 보드 v2 (3섹션) ── */
-.section-label{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
-.section-label.red{color:var(--red);}.section-label.red::after{background:rgba(224,62,62,.15);}
-.section-label.yellow{color:var(--yellow);}.section-label.yellow::after{background:rgba(212,136,15,.15);}
-.section-label.blue{color:var(--accent);}.section-label.blue::after{background:rgba(0,102,204,.15);}
+/* ── Content Container ── */
+.content{max-width:1200px;margin:0 auto;padding:24px 28px 40px;}
 
-/* Top 3 위험 지역 */
-.top3-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-@media(max-width:700px){.top3-strip{grid-template-columns:1fr;}}
-.top3-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:all .2s;}
-.top3-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.top3-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red);}
-.top3-rank{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:6px;}
-.top3-name{font-size:15px;font-weight:700;margin-bottom:4px;}
-.top3-score{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--red);display:flex;align-items:baseline;gap:3px;margin-bottom:6px;}.top3-score .pct{font-size:11px;color:var(--text3);}
-.top3-summary{font-size:11px;color:var(--text2);line-height:1.6;}
+/* ── Summary Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;}
+.mc-left{display:flex;flex-direction:column;gap:4px;}
+.mc-label{font-size:11px;color:var(--text3);font-weight:500;}
+.mc-value{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;line-height:1;}
+.mc-delta{font-size:11px;font-family:'Space Mono',monospace;font-weight:600;margin-top:2px;}
+.mc-delta.up{color:var(--red);}.mc-delta.down{color:var(--green);}.mc-delta.flat{color:var(--text3);}
+.mc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.mc-icon.ic-risk{background:var(--accent2);color:var(--accent);}
+.mc-icon.ic-high{background:var(--red-bg);color:var(--red);}
+.mc-icon.ic-conflict{background:var(--orange-bg);color:var(--orange);}
+.mc-icon.ic-stable{background:var(--green-bg);color:var(--green);}
 
-/* 3축 스코어 바 */
-.score-axes{display:flex;gap:6px;margin-top:8px;}
-.axis{flex:1;}.axis-lbl{font-size:8px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;}
-.axis-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}.axis-bar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
-.ax-mil .axis-bar-fill{background:#c23c3c;}.ax-pol .axis-bar-fill{background:#d4880f;}.ax-mkt .axis-bar-fill{background:#0066cc;}
+/* ── Featured Card (THE CORE) ── */
+.featured{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;margin-bottom:28px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.ft-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+.ft-region{display:flex;align-items:center;gap:10px;}
+.ft-flag{font-size:24px;}
+.ft-name{font-size:20px;font-weight:700;}
+.ft-score-block{text-align:right;}
+.ft-score{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;line-height:1;}
+.ft-score.lv-vh{color:var(--red);}.ft-score.lv-h{color:var(--orange);}.ft-score.lv-m{color:var(--yellow);}.ft-score.lv-l{color:var(--green);}
+.ft-level{font-size:11px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 10px;border-radius:4px;display:inline-block;margin-top:4px;}
+.ft-level.lv-vh{background:var(--red-bg);color:var(--red);}.ft-level.lv-h{background:var(--orange-bg);color:var(--orange);}
+.ft-level.lv-m{background:var(--yellow-bg);color:var(--yellow);}.ft-level.lv-l{background:var(--green-bg);color:var(--green);}
 
-/* 리스크 카테고리 섹션 */
-.risk-section{margin-bottom:18px;}
-.risk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
-@media(max-width:480px){.risk-grid{grid-template-columns:1fr;}}
+.ft-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.ft-risk-panel{padding:20px 24px;border-right:1px solid var(--border);}
+.ft-econ-panel{padding:20px 24px;}
+.ft-panel-title{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;margin-bottom:14px;font-weight:700;}
 
-/* 리스크 카드 (공통) */
-.risk-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.risk-card:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 3px 10px rgba(0,0,0,.06);}
-.risk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.risk-card.rc-high::before{background:var(--red);}.risk-card.rc-med::before{background:var(--yellow);}.risk-card.rc-low::before{background:var(--green);}
-.rk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.rk-flag{font-size:15px;}
-.rk-score{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;display:flex;align-items:baseline;gap:2px;}.rk-score .pct{font-size:10px;color:var(--text3);}
-.rk-score.s-high{color:var(--red);}.rk-score.s-med{color:var(--yellow);}.rk-score.s-low{color:var(--green);}
-.rk-name{font-size:13px;font-weight:700;margin-bottom:4px;}
-.rk-summary{font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:8px;}
-.rk-badges{display:flex;flex-wrap:wrap;gap:4px;}
-.rk-badge{font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:3px;font-weight:700;}
-.rk-b-intensity{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
-.rk-b-end{background:rgba(0,102,204,.08);color:var(--accent);border:1px solid rgba(0,102,204,.2);}
+.ft-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--surface2);}
+.ft-row:last-child{border-bottom:none;}
+.ft-row-label{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.ft-row-label .ico{font-size:14px;width:20px;text-align:center;}
+.ft-row-value{font-size:12px;font-weight:600;}
+.ft-row-value.val-high{color:var(--red);}.ft-row-value.val-med{color:var(--orange);}.ft-row-value.val-low{color:var(--green);}.ft-row-value.val-up{color:var(--red);}.ft-row-value.val-down{color:var(--green);}.ft-row-value.val-neutral{color:var(--text3);}
 
-/* 대만해협 하이라이트 카드 */
-.risk-card.highlight{border:2px solid var(--red);background:linear-gradient(135deg,rgba(224,62,62,.02),var(--surface));box-shadow:0 0 0 3px rgba(224,62,62,.08);}
-.risk-card.highlight::before{height:4px;background:linear-gradient(90deg,var(--red),#ff6b6b);}
-.highlight-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;color:#fff;background:var(--red);padding:2px 8px;border-radius:3px;margin-bottom:8px;animation:pulse-badge 2s infinite;}
-@keyframes pulse-badge{0%,100%{opacity:1;}50%{opacity:.7;}}
+.ft-sectors{display:flex;gap:5px;flex-wrap:wrap;}
+.ft-chip{font-size:10px;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:4px;font-weight:600;}
+.ft-chip.chip-win{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.ft-chip.chip-lose{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 
-/* ── 메인 그리드 ── */
-main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24px 28px;display:grid;grid-template-columns:1fr 320px;gap:14px;}
-@media(max-width:960px){main{grid-template-columns:1fr;}}
+.ft-footer{padding:16px 24px;border-top:1px solid var(--border);background:var(--surface2);}
+.ft-oneliner{font-size:13px;line-height:1.7;color:var(--text);}
+.ft-oneliner-icon{font-size:14px;margin-right:6px;color:var(--accent);}
+.ft-events{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+.ft-event-tag{font-size:10px;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text2);}
 
-/* ── 투자 시그널 (한국어 우선 재설계) ── */
-.signals-section{grid-column:1/-1;margin-bottom:2px;}
-.signals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-@media(max-width:760px){.signals-grid{grid-template-columns:1fr;}}
-.signal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.signal-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.signal-card.s-red{border-top:3px solid var(--red);}
-.signal-card.s-yellow{border-top:3px solid var(--yellow);}
-.signal-card.s-green{border-top:3px solid var(--green);}
-.signal-header{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
-.signal-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:.2px;}
-.sb-red{background:rgba(224,62,62,.1);color:var(--red);border:1px solid rgba(224,62,62,.2);}
-.sb-yellow{background:rgba(212,136,15,.1);color:var(--yellow);border:1px solid rgba(212,136,15,.2);}
-.sb-green{background:rgba(10,138,62,.1);color:var(--green);border:1px solid rgba(10,138,62,.2);}
-.signal-sector-tag{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto;}
-.signal-headline{font-size:14px;font-weight:700;line-height:1.45;margin-bottom:11px;color:var(--text);}
-.signal-impact{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
-.impact-col-lbl{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.5px;margin-bottom:5px;}.lbl-gain{color:var(--green);}.lbl-loss{color:var(--red);}
-.impact-pills{display:flex;flex-wrap:wrap;gap:4px;}
-.pill{font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:3px;font-weight:700;}
-.pill-gain{background:rgba(10,138,62,.08);color:var(--green);border:1px solid rgba(10,138,62,.2);}
-.pill-loss{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
+/* ── Region Grid ── */
+.region-section-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.region-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.region-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px;}
+.region-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.region-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--accent);}
+.region-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;}
+.region-card.rc-vh::before{background:var(--red);}.region-card.rc-h::before{background:var(--orange);}
+.region-card.rc-m::before{background:var(--yellow);}.region-card.rc-l::before{background:var(--green);}
 
-/* ── 지역 필터 탭 ── */
-.regions-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
-@media(max-width:960px){.regions-row{grid-template-columns:repeat(4,1fr);}}
-@media(max-width:500px){.regions-row{grid-template-columns:repeat(2,1fr);}}
-.rc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px;cursor:pointer;transition:all .2s;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.03);}
-.rc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:8px 8px 0 0;}
-.rc.rh::before{background:var(--red);}.rc.rm::before{background:var(--yellow);}.rc.rl::before{background:var(--green);}
-.rc:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.06);}
-.rc.active{border-color:var(--accent);background:var(--accent2);}
-.rc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
-.rc-flag{font-size:15px;}.rc-risk{font-size:8px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 5px;border-radius:2px;}
-.rh .rc-risk{background:rgba(224,62,62,.1);color:var(--red);}.rm .rc-risk{background:rgba(212,136,15,.1);color:var(--yellow);}.rl .rc-risk{background:rgba(10,138,62,.1);color:var(--green);}
-.rc-name{font-size:11px;font-weight:700;margin-bottom:2px;}.rc-sub{font-size:9px;color:var(--text2);margin-bottom:6px;}
-.rc-bar{height:2px;background:var(--border);border-radius:1px;}.rc-bar-fill{height:100%;border-radius:1px;}
-.rh .rc-bar-fill{background:var(--red);}.rm .rc-bar-fill{background:var(--yellow);}.rl .rc-bar-fill{background:var(--green);}
+.rg-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.rg-info{display:flex;flex-direction:column;gap:3px;}
+.rg-name{font-size:14px;font-weight:700;}
+.rg-level{font-size:10px;font-family:'Space Mono',monospace;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+.rg-level.lv-vh{color:var(--red);}.rg-level.lv-h{color:var(--orange);}.rg-level.lv-m{color:var(--yellow);}.rg-level.lv-l{color:var(--green);}
+.rg-trend{font-size:11px;font-family:'Space Mono',monospace;}.rg-trend.t-up{color:var(--red);}.rg-trend.t-down{color:var(--green);}.rg-trend.t-flat{color:var(--text3);}
+.rg-score{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;line-height:1;}
+.rg-score.lv-vh{color:var(--red);}.rg-score.lv-h{color:var(--orange);}.rg-score.lv-m{color:var(--yellow);}.rg-score.lv-l{color:var(--green);}
+.rg-score-sub{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-align:right;}
 
-/* ── 뉴스 패널 ── */
-.news-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.ph{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.pt{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}.pt span{width:5px;height:5px;background:var(--accent);border-radius:50%;}
-.search{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 9px;width:170px;}
-.search input{background:none;border:none;outline:none;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:11px;width:100%;}.search input::placeholder{color:var(--text3);}
-.ai-strip{padding:11px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(0,102,204,.03),transparent);flex-shrink:0;}
-.ai-lbl{font-size:9px;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:1px;margin-bottom:6px;}
-.ai-row{display:flex;gap:6px;}
-.ai-in{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:11px;outline:none;transition:border-color .2s;}.ai-in:focus{border-color:var(--accent);}.ai-in::placeholder{color:var(--text3);}
-.ai-btn{background:var(--accent);border:none;border-radius:5px;padding:7px 13px;color:#fff;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}.ai-btn:hover{background:#0052a3;}
-.presets{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
-.pre{font-size:10px;padding:3px 8px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}.pre:hover{border-color:var(--accent);color:var(--accent);}
-.ai-resp{margin:8px 16px;padding:11px 13px;background:var(--accent2);border:1px solid rgba(0,102,204,.15);border-radius:7px;font-size:12px;line-height:1.75;display:none;animation:fi .3s ease;}.ai-resp.on{display:block;}
-@keyframes fi{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
-.ai-resp-hd{font-size:9px;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:1px;margin-bottom:7px;}
-.news-list{flex:1;overflow-y:auto;padding:4px 0;min-height:200px;}.news-list::-webkit-scrollbar{width:3px;}.news-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.ni{padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}.ni:hover{background:var(--surface2);}
-.ni-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
-.nt{font-size:8px;font-family:'Space Mono',monospace;letter-spacing:.3px;padding:2px 6px;border-radius:2px;font-weight:700;}
-.t-war{background:rgba(224,62,62,.1);color:var(--red);}.t-trade{background:rgba(0,102,204,.1);color:var(--accent);}.t-energy{background:rgba(212,136,15,.1);color:var(--yellow);}.t-market{background:rgba(10,138,62,.1);color:var(--green);}.t-pol{background:rgba(130,80,220,.1);color:#7c4dbd;}
-.n-region{font-size:10px;color:var(--text2);}.n-time{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);margin-left:auto;}
-.n-title{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:7px;}
-.n-summary{display:flex;gap:6px;align-items:flex-start;background:var(--accent2);border-left:3px solid var(--accent);border-radius:0 5px 5px 0;padding:7px 10px;margin-bottom:9px;font-size:11px;line-height:1.6;color:var(--text);}
-.n-summary-lbl{font-size:9px;font-family:'Space Mono',monospace;color:var(--accent);font-weight:700;white-space:nowrap;padding-top:1px;}
-.n-summary-txt{flex:1;}
-.n-impact{display:grid;grid-template-columns:auto auto 1fr;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
-.n-ic{padding:8px 10px;}.n-ic:first-child{border-right:1px solid var(--border);}.n-ic:nth-child(2){border-right:1px solid var(--border);}
-.n-ic-lbl{font-size:8px;font-family:'Space Mono',monospace;letter-spacing:.5px;margin-bottom:4px;}.lbl-g{color:var(--green);}.lbl-r{color:var(--red);}.lbl-s{color:var(--text3);}
-.n-pills{display:flex;flex-wrap:wrap;gap:3px;}
-.np{font-size:9px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:2px;font-weight:700;}.np-g{background:rgba(10,138,62,.08);color:var(--green);}.np-r{background:rgba(224,62,62,.08);color:var(--red);}
-.horizon{font-size:10px;color:var(--text2);line-height:1.5;}
-.loading-msg{padding:30px;text-align:center;color:var(--text3);font-size:12px;animation:pulse 1.5s infinite;}
-@keyframes pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+.rg-issues{margin-top:8px;padding-top:8px;border-top:1px solid var(--surface2);}
+.rg-issue{font-size:11px;color:var(--text2);line-height:1.7;padding-left:12px;position:relative;}
+.rg-issue::before{content:'•';position:absolute;left:0;color:var(--text3);}
 
-/* ── 사이드바 ── */
-.sidebar{display:flex;flex-direction:column;gap:12px;}
-.box{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.mkt-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 15px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.mkt-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}.mkt-row:last-child{border-bottom:none;}
-.mkt-a{color:var(--text2);font-family:'Space Mono',monospace;font-size:10px;}.mkt-v{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
-.up{color:var(--green);}.down{color:var(--red);}.flat{color:var(--text2);}
-.al{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;gap:7px;font-size:11px;line-height:1.5;}.al:last-child{border-bottom:none;}
-.al-i{font-size:12px;flex-shrink:0;}.al-t{color:var(--text2);}.al-t strong{color:var(--text);font-weight:600;}
-.cp-item{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;gap:9px;align-items:flex-start;}.cp-item:last-child{border-bottom:none;}
-.cp-n{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--border2);line-height:1;flex-shrink:0;}
-.cp-t{font-size:11px;font-weight:700;margin-bottom:2px;line-height:1.3;}
-.cp-tag{display:inline-block;font-size:8px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:2px;}
-.cp-buy{background:rgba(10,138,62,.08);color:var(--green);border:1px solid rgba(10,138,62,.2);}
-.cp-caution{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
-.cp-watch{background:rgba(212,136,15,.08);color:var(--yellow);border:1px solid rgba(212,136,15,.2);}
-.box-header{padding:11px 14px;border-bottom:1px solid var(--border);font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);letter-spacing:.5px;font-weight:700;}
+/* ── Trend Section ── */
+.trend-section{margin-bottom:32px;}
+.trend-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.trend-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.trend-list{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.trend-row{display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid var(--surface2);gap:12px;}
+.trend-row:last-child{border-bottom:none;}
+.trend-rank{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);width:20px;}
+.trend-name{font-size:13px;font-weight:600;flex:1;}
+.trend-bar{width:120px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.trend-bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.trend-bar-fill.lv-vh{background:var(--red);}.trend-bar-fill.lv-h{background:var(--orange);}
+.trend-bar-fill.lv-m{background:var(--yellow);}.trend-bar-fill.lv-l{background:var(--green);}
+.trend-score{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;width:36px;text-align:right;}
+.trend-delta{font-family:'Space Mono',monospace;font-size:11px;font-weight:600;width:40px;text-align:right;}
 
-/* ── 모바일 반응형 (≤600px) ── */
-@media(max-width:600px){
-  /* 헤더 */
-  .last-update{display:none;}
-  header{padding:0 12px 0 6px;}
+/* ── Community Panel ── */
+.community-section{margin-bottom:32px;}
+.community-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.community-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.community-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.discussion-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .12s;}
+.discussion-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.disc-text{font-size:13px;font-weight:500;line-height:1.6;margin-bottom:10px;color:var(--text);}
+.disc-meta{display:flex;align-items:center;gap:12px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
+.disc-vote{display:flex;align-items:center;gap:3px;font-weight:700;color:var(--accent);}
+.disc-tag{padding:2px 7px;border-radius:3px;background:var(--surface2);font-size:9px;}
 
-  /* 히어로 */
-  .hero{padding:16px 14px 0;}
-  .hero-top{gap:14px;}
-  .hero-text h1{font-size:19px;}
-  .hero-text p{font-size:12px;}
-  .hero-gauge{padding:12px 14px;gap:12px;}
-  .g-ring{width:64px;height:64px;}
-  .g-ring svg{width:64px;height:64px;}
-  .g-num{font-size:18px;}
-
-  /* 메인 패딩 */
-  main{padding:10px 14px 24px;}
-
-  /* 검색바 */
-  .search{width:auto;flex:1;min-width:0;}
-  .ph{gap:8px;}
-
-  /* AI 프리셋 스크롤 */
-  .presets{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
-  .presets::-webkit-scrollbar{display:none;}
-  .pre{flex-shrink:0;}
-
-  /* 뉴스 */
-  .n-title{font-size:12px;}
-  .n-impact{font-size:9px;overflow-x:auto;}
-  .n-ic{padding:7px 8px;}
-  .n-ic-lbl{font-size:7px;}
-
-  /* 시그널 카드 */
-  .signal-headline{font-size:13px;}
-
-  /* 분쟁 지역 카드 */
-  .dc-name{font-size:13px;}
-  .dc-reason{font-size:10px;}
-
-  /* 섹션 레이블 */
-  .section-label{font-size:8px;}
-
-  /* 속보 티커 */
-  .ticker-lbl{font-size:8px;padding:0 10px;}
-  .ti{font-size:10px;}
-
-  /* 지역 필터 */
-  .rc{padding:9px 8px;}
-  .rc-name{font-size:10px;}
-  .rc-sub{font-size:8px;}
+/* ═══ Responsive ═══ */
+@media(max-width:1024px){
+  .sidebar{transform:translateX(-100%);z-index:200;}
+  .sidebar.open{transform:translateX(0);}
+  .sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.2);}
+  .sb-overlay.on{display:block;}
+  .mobile-header{display:flex;}
+  .main{margin-left:0;}
+  .content{padding:20px 16px 32px;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .ft-body{grid-template-columns:1fr;}
+  .ft-risk-panel{border-right:none;border-bottom:1px solid var(--border);}
+  .region-grid{grid-template-columns:repeat(2,1fr);}
+  .community-grid{grid-template-columns:1fr;}
 }
-
-/* ── 초소형 화면 (≤360px, Galaxy S 시리즈 등) ── */
-@media(max-width:360px){
-  .hero-text h1{font-size:17px;}
-  .logo-text{font-size:15px;}
-  .hero-gauge{flex-direction:column;align-items:flex-start;gap:8px;}
-  .signals-grid{grid-template-columns:1fr;}
-  .top3-strip{grid-template-columns:1fr;}
-  .risk-grid{grid-template-columns:1fr;}
+@media(max-width:600px){
+  .metrics{grid-template-columns:1fr 1fr;gap:8px;}
+  .mc-value{font-size:22px;}
+  .region-grid{grid-template-columns:1fr;}
+  .ft-header{flex-direction:column;gap:10px;}
+  .ft-score-block{text-align:left;}
+  .ft-score{font-size:28px;}
+  .trend-bar{width:80px;}
+  .alert-banner{padding:10px 16px;font-size:12px;}
 }
 </style>
 </head>
 <body>
 
-<!-- ── 헤더 ── -->
-<header>
-  <div style="display:flex;align-items:center;gap:2px;">
-    <button class="hamburger" onclick="toggleNav()" aria-label="메뉴">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <a class="logo" href="/" onclick="event.preventDefault();window.location.reload();">
-      <svg class="logo-globe" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      <span class="logo-text">GeoInvest <div class="logo-dot"></div></span>
-    </a>
+<!-- ═══ Sidebar ═══ -->
+<div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">G</div>
+    <div class="sb-logo-txt"><span>Geo</span>Invest</div>
   </div>
-  <div class="header-right">
-    <div class="live-pill"><div class="live-dot"></div>실시간</div>
-    <div class="last-update">업데이트: <span id="lastUpdate">불러오는 중...</span></div>
-  </div>
-</header>
+  <nav class="sb-nav">
+    <span class="sb-section">OVERVIEW</span>
+    <button class="sb-item active" onclick="navTo('home',this)"><span class="sb-icon">🏠</span>홈</button>
+    <button class="sb-item" onclick="navTo('regions',this)"><span class="sb-icon">🌍</span>지역별 현황</button>
+    <button class="sb-item" onclick="navTo('alerts',this)"><span class="sb-icon">⚠️</span>경보<span class="sb-badge" id="alertCount">3</span></button>
+    <button class="sb-item" onclick="navTo('trends',this)"><span class="sb-icon">📈</span>추세</button>
+    <div class="sb-divider"></div>
+    <span class="sb-section">COMMUNITY</span>
+    <button class="sb-item" onclick="navTo('community',this)"><span class="sb-icon">💬</span>토론</button>
+    <div class="sb-divider"></div>
+    <span class="sb-section">REGIONS</span>
+    <button class="sb-item" onclick="scrollToRegion('east-asia')"><span class="sb-icon">🌏</span>동아시아</button>
+    <button class="sb-item" onclick="scrollToRegion('middle-east')"><span class="sb-icon">🌍</span>중동</button>
+    <button class="sb-item" onclick="scrollToRegion('east-europe')"><span class="sb-icon">🇺🇦</span>동유럽</button>
+    <button class="sb-item" onclick="scrollToRegion('south-asia')"><span class="sb-icon">🌏</span>남아시아</button>
+  </nav>
+  <div class="sb-footer">업데이트: <span id="sbTime">—</span></div>
+</aside>
 
-<!-- ── 좌측 네비게이션 패널 ── -->
-<div class="nav-overlay" id="navOverlay" onclick="toggleNav()"></div>
-<nav class="nav-sidebar" id="navSidebar">
-  <span class="nav-section-lbl">분쟁 지역</span>
-  <button class="nav-item active" onclick="navSel('러시아-우크라이나',this)"><span class="nav-icon">🇺🇦</span>러-우 전쟁<span class="nav-risk-dot dot-h"></span></button>
-  <button class="nav-item" onclick="navSel('중동 분쟁',this)"><span class="nav-icon">🌍</span>중동 분쟁<span class="nav-risk-dot dot-h"></span></button>
-  <button class="nav-item" onclick="navSel('미-중 무역전쟁',this)"><span class="nav-icon">🇺🇸</span>미-중 갈등<span class="nav-risk-dot dot-h"></span></button>
-  <button class="nav-item" onclick="navSel('대만해협',this)"><span class="nav-icon">🇹🇼</span>대만해협<span class="nav-risk-dot dot-m"></span></button>
-  <button class="nav-item" onclick="navSel('유럽 에너지',this)"><span class="nav-icon">🇪🇺</span>유럽 에너지<span class="nav-risk-dot dot-m"></span></button>
-  <button class="nav-item" onclick="navSel('남중국해',this)"><span class="nav-icon">🚢</span>남중국해<span class="nav-risk-dot dot-m"></span></button>
-  <button class="nav-item" onclick="navSel('한반도',this)"><span class="nav-icon">🇰🇷</span>한반도<span class="nav-risk-dot dot-l"></span></button>
-  <div class="nav-divider"></div>
-  <span class="nav-section-lbl">투자 섹터</span>
-  <button class="nav-item" onclick="navSel('방산',this)"><span class="nav-icon">🛡️</span>방위산업</button>
-  <button class="nav-item" onclick="navSel('반도체',this)"><span class="nav-icon">💡</span>반도체</button>
-  <button class="nav-item" onclick="navSel('에너지',this)"><span class="nav-icon">⛽</span>에너지·정유</button>
-  <button class="nav-item" onclick="navSel('배터리',this)"><span class="nav-icon">🔋</span>배터리</button>
-  <button class="nav-item" onclick="navSel('조선',this)"><span class="nav-icon">🚢</span>조선·LNG</button>
-  <div class="nav-divider"></div>
-  <span class="nav-section-lbl">서비스</span>
-  <button class="nav-item" onclick="toggleNav();document.getElementById('emailIn')?.focus();"><span class="nav-icon">📧</span>뉴스레터 구독</button>
-</nav>
-
-<!-- ── 속보 티커 ── -->
-<div class="ticker">
-  <div class="ticker-lbl">속보</div>
-  <div class="ticker-scroll">
-    <div class="ticker-track">
-      <span class="ti ti-r">🔴 러-우 드론 공격 ▼ 에너지인프라</span><span class="ti ti-r">🔴 미-중 HBM 규제 ▼ 반도체 하방</span><span class="ti ti-y">🟡 중동 협상 결렬 ◆ 유가 상승</span><span class="ti ti-g">🟢 방산ETF ▲ +3.55%</span><span class="ti ti-g">🟢 LNG선 수주 ▲ 급증</span><span class="ti ti-r">🔴 KOSPI ▼ -1.24%</span><span class="ti ti-g">🟢 금(GOLD) ▲ +0.93%</span><span class="ti ti-y">🟡 대만해협 ◆ 긴장 유지</span>
-      <span class="ti ti-r">🔴 러-우 드론 공격 ▼ 에너지인프라</span><span class="ti ti-r">🔴 미-중 HBM 규제 ▼ 반도체 하방</span><span class="ti ti-y">🟡 중동 협상 결렬 ◆ 유가 상승</span><span class="ti ti-g">🟢 방산ETF ▲ +3.55%</span><span class="ti ti-g">🟢 LNG선 수주 ▲ 급증</span><span class="ti ti-r">🔴 KOSPI ▼ -1.24%</span><span class="ti ti-g">🟢 금(GOLD) ▲ +0.93%</span><span class="ti ti-y">🟡 대만해협 ◆ 긴장 유지</span>
-    </div>
-  </div>
+<!-- ═══ Mobile Header ═══ -->
+<div class="mobile-header">
+  <button class="mob-hamburger" onclick="toggleSidebar()" aria-label="메뉴">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="mob-logo"><span>Geo</span>Invest</div>
+  <div class="mob-live">● LIVE</div>
 </div>
 
-<!-- ── 히어로 ── -->
-<div class="hero">
-  <div class="hero-top">
-    <div class="hero-text">
-      <h1><em>지정학 리스크</em> 평가 시스템</h1>
-      <p>3축 스코어링 (군사·정치·시장) 기반 실시간 분석 — 한국 투자자를 위한 리스크 인텔리전스</p>
-    </div>
-    <div class="hero-gauge">
-      <div class="g-ring">
-        <svg width="76" height="76" viewBox="0 0 100 100"><circle class="g-bg" cx="50" cy="50" r="42"/><circle class="g-fill" cx="50" cy="50" r="42" stroke="#e03e3e" stroke-dasharray="264" stroke-dashoffset="61" id="gCircle"/></svg>
-        <div class="g-center"><div class="g-num" id="gNum">—</div><div class="g-unit">%</div></div>
+<!-- ═══ Main Content ═══ -->
+<div class="main">
+
+  <!-- Alert Banner -->
+  <div class="alert-banner" id="alertBanner">
+    <span class="alert-icon">⚠️</span>
+    <div class="alert-text"><strong>고위험 경보</strong> — 중동·동유럽 리스크가 매우 높은 수준입니다. 에너지·방산 섹터 변동성 확대에 유의하세요.</div>
+    <button class="alert-dismiss" onclick="this.parentElement.style.display='none'">✕</button>
+  </div>
+
+  <div class="content">
+
+    <!-- Summary Metrics -->
+    <div class="metrics" id="metricsGrid">
+      <div class="metric-card">
+        <div class="mc-left">
+          <div class="mc-label">전체 평균 위험도</div>
+          <div class="mc-value" id="mAvgScore">65</div>
+          <div class="mc-delta up" id="mAvgDelta">+3.2</div>
+        </div>
+        <div class="mc-icon ic-risk">🌐</div>
       </div>
-      <div class="g-info">
-        <div class="g-title">종합 리스크 지수</div>
-        <div class="g-status" id="gStatus">불러오는 중...</div>
-        <div class="g-delta" id="gDelta" style="display:none;"></div>
+      <div class="metric-card">
+        <div class="mc-left">
+          <div class="mc-label">고위험 지역</div>
+          <div class="mc-value" id="mHighCount">3</div>
+          <div class="mc-delta up">+1</div>
+        </div>
+        <div class="mc-icon ic-high">⚠️</div>
       </div>
-    </div>
-  </div>
-
-  <!-- Top 3 고위험 지역 -->
-  <div class="section-label red">🔺 TOP 3 — 글로벌 최고 위험</div>
-  <div class="top3-strip" id="top3Strip">
-    <div class="top3-card"><div class="top3-rank">#1</div><div class="top3-name">불러오는 중...</div></div>
-    <div class="top3-card"><div class="top3-rank">#2</div><div class="top3-name">—</div></div>
-    <div class="top3-card"><div class="top3-rank">#3</div><div class="top3-name">—</div></div>
-  </div>
-
-  <!-- ═══ 섹션 1: 현재 전쟁 ═══ -->
-  <div class="risk-section">
-    <div class="section-label red">⚔️ 현재 전쟁 — ONGOING CONFLICTS</div>
-    <div class="risk-grid" id="ongoingGrid"></div>
-  </div>
-
-  <!-- ═══ 섹션 2: 전쟁 가능성 ═══ -->
-  <div class="risk-section">
-    <div class="section-label yellow">⚠️ 전쟁 가능성 — WAR RISK</div>
-    <div class="risk-grid" id="warRiskGrid"></div>
-  </div>
-
-  <!-- ═══ 섹션 3: 글로벌 리스크 ═══ -->
-  <div class="risk-section">
-    <div class="section-label blue">🌐 글로벌 리스크 — GLOBAL RISK FACTORS</div>
-    <div class="risk-grid" id="globalRiskGrid"></div>
-  </div>
-</div>
-
-<!-- ── 메인 콘텐츠 ── -->
-<main>
-  <!-- 오늘의 투자 시그널 -->
-  <div class="signals-section">
-    <div class="section-label">📌 오늘의 투자 시그널</div>
-    <div class="signals-grid">
-
-      <div class="signal-card s-red">
-        <div class="signal-header">
-          <span class="signal-badge sb-red">🔴 긴급 주목</span>
-          <span class="signal-sector-tag">메모리 반도체</span>
+      <div class="metric-card">
+        <div class="mc-left">
+          <div class="mc-label">활성 분쟁</div>
+          <div class="mc-value" id="mConflictCount">4</div>
+          <div class="mc-delta up">+1</div>
         </div>
-        <div class="signal-headline">미-중 HBM 수출 규제 확대<br>삼성·하이닉스 단기 하방 압력</div>
-        <div class="signal-impact">
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-gain">▲ 수혜</div>
-            <div class="impact-pills"><span class="pill pill-gain">마이크론</span><span class="pill pill-gain">국내파운드리</span></div>
-          </div>
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-loss">▼ 피해</div>
-            <div class="impact-pills"><span class="pill pill-loss">삼성전자</span><span class="pill pill-loss">SK하이닉스</span></div>
-          </div>
-        </div>
+        <div class="mc-icon ic-conflict">🔥</div>
       </div>
-
-      <div class="signal-card s-green">
-        <div class="signal-header">
-          <span class="signal-badge sb-green">🟢 수혜 기회</span>
-          <span class="signal-sector-tag">방위산업</span>
+      <div class="metric-card">
+        <div class="mc-left">
+          <div class="mc-label">안정 지역</div>
+          <div class="mc-value" id="mStableCount">2</div>
+          <div class="mc-delta flat">0</div>
         </div>
-        <div class="signal-headline">유럽 방산 예산 GDP 3% 확대<br>한국 방산 수출 모멘텀 가속</div>
-        <div class="signal-impact">
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-gain">▲ 수혜</div>
-            <div class="impact-pills"><span class="pill pill-gain">LIG넥스원</span><span class="pill pill-gain">한화에어로</span><span class="pill pill-gain">KAI</span></div>
-          </div>
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-loss">▼ 피해</div>
-            <div class="impact-pills"><span class="pill pill-loss" style="opacity:.4">없음</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="signal-card s-yellow">
-        <div class="signal-header">
-          <span class="signal-badge sb-yellow">🟡 모니터링</span>
-          <span class="signal-sector-tag">정유·항공</span>
-        </div>
-        <div class="signal-headline">중동 협상 결렬 · 유가 상승<br>정유 단기 수혜 vs 항공 부담</div>
-        <div class="signal-impact">
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-gain">▲ 수혜</div>
-            <div class="impact-pills"><span class="pill pill-gain">S-Oil</span><span class="pill pill-gain">GS홀딩스</span></div>
-          </div>
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-loss">▼ 피해</div>
-            <div class="impact-pills"><span class="pill pill-loss">대한항공</span><span class="pill pill-loss">제주항공</span></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- 지역 필터 탭 -->
-  <div class="regions-row">
-    <div class="rc rh active" onclick="sel(this,'러시아-우크라이나')"><div class="rc-top"><div class="rc-flag">🇺🇦</div><div class="rc-risk">높음</div></div><div class="rc-name">러-우 전쟁</div><div class="rc-sub">방산·에너지</div><div class="rc-bar"><div class="rc-bar-fill" style="width:88%"></div></div></div>
-    <div class="rc rh" onclick="sel(this,'중동 분쟁')"><div class="rc-top"><div class="rc-flag">🌍</div><div class="rc-risk">높음</div></div><div class="rc-name">중동 분쟁</div><div class="rc-sub">유가·정유주</div><div class="rc-bar"><div class="rc-bar-fill" style="width:82%"></div></div></div>
-    <div class="rc rh" onclick="sel(this,'미-중 무역전쟁')"><div class="rc-top"><div class="rc-flag">🇺🇸</div><div class="rc-risk">높음</div></div><div class="rc-name">미-중 갈등</div><div class="rc-sub">반도체·배터리</div><div class="rc-bar"><div class="rc-bar-fill" style="width:79%"></div></div></div>
-    <div class="rc rm" onclick="sel(this,'대만해협')"><div class="rc-top"><div class="rc-flag">🇹🇼</div><div class="rc-risk">중간</div></div><div class="rc-name">대만해협</div><div class="rc-sub">반도체 공급망</div><div class="rc-bar"><div class="rc-bar-fill" style="width:62%"></div></div></div>
-    <div class="rc rm" onclick="sel(this,'유럽 에너지')"><div class="rc-top"><div class="rc-flag">🇪🇺</div><div class="rc-risk">중간</div></div><div class="rc-name">유럽 에너지</div><div class="rc-sub">LNG·조선주</div><div class="rc-bar"><div class="rc-bar-fill" style="width:55%"></div></div></div>
-    <div class="rc rm" onclick="sel(this,'남중국해')"><div class="rc-top"><div class="rc-flag">🚢</div><div class="rc-risk">중간</div></div><div class="rc-name">남중국해</div><div class="rc-sub">해상물류·조선</div><div class="rc-bar"><div class="rc-bar-fill" style="width:48%"></div></div></div>
-    <div class="rc rl" onclick="sel(this,'한반도')"><div class="rc-top"><div class="rc-flag">🇰🇷</div><div class="rc-risk">낮음</div></div><div class="rc-name">한반도</div><div class="rc-sub">방산 수출</div><div class="rc-bar"><div class="rc-bar-fill" style="width:35%"></div></div></div>
-  </div>
-
-  <!-- 뉴스 패널 -->
-  <div class="news-panel">
-    <div class="ph"><div class="pt"><span></span>지정학 뉴스 — 투자 해석</div><div class="search"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="종목·이슈 검색..." oninput="filterNews(this.value)"></div></div>
-    <div class="ai-strip">
-      <div class="ai-lbl">⚡ AI 투자 분석</div>
-      <div class="ai-row"><input class="ai-in" id="aiIn" type="text" placeholder="예: 방산주 단기 전망은?" onkeydown="if(event.key==='Enter')askAI()"><button class="ai-btn" onclick="askAI()">분석하기</button></div>
-      <div class="presets"><button class="pre" onclick="sp('러-우 전쟁 장기화 시 방산주 전망은?')">🔴 방산주</button><button class="pre" onclick="sp('미-중 반도체 규제 SK하이닉스 영향은?')">💡 반도체</button><button class="pre" onclick="sp('중동 분쟁 악화 시 정유주 전략은?')">⛽ 정유주</button><button class="pre" onclick="sp('유럽 LNG 수요 증가 조선주 수혜는?')">🚢 조선주</button><button class="pre" onclick="sp('지정학 리스크 헤지 포트폴리오 구성법은?')">🛡️ 헤지</button></div>
-      <div class="ai-resp" id="aiResp"><div class="ai-resp-hd">⚡ AI 분석</div><div id="aiTxt"></div></div>
-    </div>
-    <div class="news-list" id="newsList"><div class="loading-msg">📡 최신 리스크 데이터 불러오는 중...</div></div>
-  </div>
-
-  <!-- 사이드바: 속보 → 시장 영향 → 체크포인트 순 -->
-  <div class="sidebar">
-
-    <!-- ① 속보 (가장 위로) -->
-    <div class="box">
-      <div class="box-header">⚡ 속보</div>
-      <div id="alerts">
-        <div class="al"><div class="al-i">🔴</div><div class="al-t"><strong>우크라이나</strong> 에너지 인프라 드론 공격 확대</div></div>
-        <div class="al"><div class="al-i">🟡</div><div class="al-t"><strong>미-중</strong> HBM 추가 수출 규제 검토</div></div>
-        <div class="al"><div class="al-i">🔴</div><div class="al-t"><strong>이란</strong> 우라늄 농축 90% 접근 우려</div></div>
-        <div class="al"><div class="al-i">🟢</div><div class="al-t"><strong>한-미</strong> 방위비 분담금 협상 타결 임박</div></div>
-        <div class="al"><div class="al-i">🟡</div><div class="al-t"><strong>대만</strong> 중국 해군 동·남중국해 훈련</div></div>
+        <div class="mc-icon ic-stable">✓</div>
       </div>
     </div>
 
-    <!-- ② 시장 영향 -->
-    <div class="mkt-box">
-      <div style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text2);letter-spacing:.5px;font-weight:700;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">시장 영향</div>
-      <div class="mkt-row"><span class="mkt-a">KOSPI</span><span class="mkt-v down">-1.24%</span></div>
-      <div class="mkt-row"><span class="mkt-a">WTI</span><span class="mkt-v up">+2.87%</span></div>
-      <div class="mkt-row"><span class="mkt-a">금(GOLD)</span><span class="mkt-v up">+0.93%</span></div>
-      <div class="mkt-row"><span class="mkt-a">달러/원</span><span class="mkt-v down">1,342▲</span></div>
-      <div class="mkt-row"><span class="mkt-a">천연가스</span><span class="mkt-v up">+4.12%</span></div>
-      <div class="mkt-row"><span class="mkt-a">방산ETF</span><span class="mkt-v up">+3.55%</span></div>
+    <!-- Featured Card -->
+    <div class="featured" id="featuredCard">
+      <div class="ft-header">
+        <div class="ft-region">
+          <span class="ft-flag">🌍</span>
+          <span class="ft-name" id="ftName">중동</span>
+        </div>
+        <div class="ft-score-block">
+          <div class="ft-score lv-vh" id="ftScore">92</div>
+          <div class="ft-level lv-vh" id="ftLevel">매우 높음</div>
+        </div>
+      </div>
+      <div class="ft-body">
+        <!-- Left: Risk Status -->
+        <div class="ft-risk-panel">
+          <div class="ft-panel-title">리스크 상태</div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">🔴</span>긴장도</div>
+            <div class="ft-row-value val-high" id="ftTension">매우 높음</div>
+          </div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">🌡️</span>안정성</div>
+            <div class="ft-row-value val-high" id="ftStability">매우 불안정</div>
+          </div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">📊</span>시장 영향</div>
+            <div class="ft-row-value val-high" id="ftMarket">높음</div>
+          </div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">📈</span>추세</div>
+            <div class="ft-row-value val-up" id="ftTrend">↗ 상승</div>
+          </div>
+        </div>
+        <!-- Right: Economic Sensitivity -->
+        <div class="ft-econ-panel">
+          <div class="ft-panel-title">경제 민감도</div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">⛽</span>원유</div>
+            <div class="ft-row-value val-up" id="ftOil">상승 압력</div>
+          </div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">💡</span>반도체</div>
+            <div class="ft-row-value val-neutral" id="ftSemi">중립</div>
+          </div>
+          <div class="ft-row">
+            <div class="ft-row-label"><span class="ico">💱</span>환율</div>
+            <div class="ft-row-value val-up" id="ftFx">원화 약세</div>
+          </div>
+          <div style="margin-top:14px;">
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;">수혜 섹터</div>
+            <div class="ft-sectors" id="ftWinners">
+              <span class="ft-chip chip-win">에너지</span><span class="ft-chip chip-win">정유</span><span class="ft-chip chip-win">방산</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;">위험 섹터</div>
+            <div class="ft-sectors" id="ftLosers">
+              <span class="ft-chip chip-lose">항공</span><span class="ft-chip chip-lose">물류</span><span class="ft-chip chip-lose">여행</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft-footer">
+        <div class="ft-oneliner"><span class="ft-oneliner-icon">💡</span><span id="ftOneliner">호르무즈 해협 긴장 고조로 원유 상방 압력 지속. 국내 정유주 단기 수혜 가능, 항공주 연료비 부담 주의.</span></div>
+        <div class="ft-events" id="ftEvents">
+          <span class="ft-event-tag">이란-이스라엘 충돌</span>
+          <span class="ft-event-tag">시리아 내전</span>
+          <span class="ft-event-tag">예멘 위기</span>
+        </div>
+      </div>
     </div>
 
-    <!-- ③ 오늘의 체크포인트 -->
-    <div class="box">
-      <div class="box-header">📌 오늘의 체크포인트</div>
-      <div class="cp-item"><div class="cp-n">01</div><div><div class="cp-t">방산주 — 비중 확대 유효</div><span class="cp-tag cp-buy">▲ 매수 관심</span></div></div>
-      <div class="cp-item"><div class="cp-n">02</div><div><div class="cp-t">반도체 — 단기 변동성 주의</div><span class="cp-tag cp-caution">⚠ 단기 주의</span></div></div>
-      <div class="cp-item"><div class="cp-n">03</div><div><div class="cp-t">조선/LNG — 수주 발표 모니터링</div><span class="cp-tag cp-watch">👀 모니터링</span></div></div>
+    <!-- Region Grid -->
+    <div class="region-section-title">📍 지역별 위험도 현황</div>
+    <div class="region-grid" id="regionGrid">
+
+      <div class="region-card rc-h" onclick="selectRegion('east-asia')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🌏 동아시아</div>
+            <div class="rg-level lv-h">높음 <span class="rg-trend t-up">↗</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-h">75</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">대만 해협 긴장</div>
+          <div class="rg-issue">북한 핵 문제</div>
+          <div class="rg-issue">중일 관계 악화</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-vh" onclick="selectRegion('middle-east')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🌍 중동</div>
+            <div class="rg-level lv-vh">매우 높음 <span class="rg-trend t-up">↗</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-vh">92</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">이란-이스라엘 충돌</div>
+          <div class="rg-issue">시리아 내전</div>
+          <div class="rg-issue">예멘 위기</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-vh" onclick="selectRegion('east-europe')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🇺🇦 동유럽</div>
+            <div class="rg-level lv-vh">매우 높음 <span class="rg-trend t-flat">—</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-vh">88</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">우크라이나 전쟁</div>
+          <div class="rg-issue">NATO 확장</div>
+          <div class="rg-issue">에너지 안보</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-m" onclick="selectRegion('south-asia')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🌏 남아시아</div>
+            <div class="rg-level lv-m">중간 <span class="rg-trend t-up">↗</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-m">58</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">인도-파키스탄 카슈미르</div>
+          <div class="rg-issue">아프간 불안정</div>
+          <div class="rg-issue">미얀마 정치 위기</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-h" onclick="selectRegion('africa')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🌍 아프리카</div>
+            <div class="rg-level lv-h">높음 <span class="rg-trend t-up">↗</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-h">70</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">수단 내전</div>
+          <div class="rg-issue">사헬 지역 불안</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-m" onclick="selectRegion('latin-america')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🌎 남미</div>
+            <div class="rg-level lv-m">중간 <span class="rg-trend t-down">↘</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-m">45</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">베네수엘라 정정 불안</div>
+          <div class="rg-issue">콜롬비아 치안</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-l" onclick="selectRegion('north-america')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🇺🇸 북미</div>
+            <div class="rg-level lv-l">낮음 <span class="rg-trend t-flat">—</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-l">25</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">미-중 전략 경쟁</div>
+          <div class="rg-issue">무역 정책 변화</div>
+        </div>
+      </div>
+
+      <div class="region-card rc-l" onclick="selectRegion('west-europe')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">🇪🇺 서유럽</div>
+            <div class="rg-level lv-l">낮음 <span class="rg-trend t-down">↘</span></div>
+          </div>
+          <div>
+            <div class="rg-score lv-l">32</div>
+            <div class="rg-score-sub">위험 지수</div>
+          </div>
+        </div>
+        <div class="rg-issues">
+          <div class="rg-issue">에너지 전환 리스크</div>
+          <div class="rg-issue">방산 예산 확대</div>
+        </div>
+      </div>
+
     </div>
 
-  </div>
-</main>
+    <!-- Trend Section -->
+    <div class="trend-title">📈 위험도 추세 — 상위 5개 지역</div>
+    <div class="trend-list" id="trendList">
+      <div class="trend-row">
+        <span class="trend-rank">1</span>
+        <span class="trend-name">🌍 중동</span>
+        <div class="trend-bar"><div class="trend-bar-fill lv-vh" style="width:92%"></div></div>
+        <span class="trend-score" style="color:var(--red)">92</span>
+        <span class="trend-delta" style="color:var(--red)">▲ +5</span>
+      </div>
+      <div class="trend-row">
+        <span class="trend-rank">2</span>
+        <span class="trend-name">🇺🇦 동유럽</span>
+        <div class="trend-bar"><div class="trend-bar-fill lv-vh" style="width:88%"></div></div>
+        <span class="trend-score" style="color:var(--red)">88</span>
+        <span class="trend-delta" style="color:var(--text3)">— 0</span>
+      </div>
+      <div class="trend-row">
+        <span class="trend-rank">3</span>
+        <span class="trend-name">🌏 동아시아</span>
+        <div class="trend-bar"><div class="trend-bar-fill lv-h" style="width:75%"></div></div>
+        <span class="trend-score" style="color:var(--orange)">75</span>
+        <span class="trend-delta" style="color:var(--red)">▲ +3</span>
+      </div>
+      <div class="trend-row">
+        <span class="trend-rank">4</span>
+        <span class="trend-name">🌍 아프리카</span>
+        <div class="trend-bar"><div class="trend-bar-fill lv-h" style="width:70%"></div></div>
+        <span class="trend-score" style="color:var(--orange)">70</span>
+        <span class="trend-delta" style="color:var(--red)">▲ +2</span>
+      </div>
+      <div class="trend-row">
+        <span class="trend-rank">5</span>
+        <span class="trend-name">🌏 남아시아</span>
+        <div class="trend-bar"><div class="trend-bar-fill lv-m" style="width:58%"></div></div>
+        <span class="trend-score" style="color:var(--yellow)">58</span>
+        <span class="trend-delta" style="color:var(--red)">▲ +4</span>
+      </div>
+    </div>
+
+    <!-- Community Section -->
+    <div style="margin-top:32px;">
+      <div class="community-title">💬 지금 주목하는 이슈</div>
+      <div class="community-grid" id="communityGrid">
+        <div class="discussion-card">
+          <div class="disc-text">"중동 긴장 속 정유주 단기 매수 타이밍일까요?"</div>
+          <div class="disc-meta">
+            <span class="disc-vote">👍 42</span>
+            <span class="disc-tag">중동</span>
+            <span class="disc-tag">에너지</span>
+            <span>12분 전</span>
+          </div>
+        </div>
+        <div class="discussion-card">
+          <div class="disc-text">"대만 리스크가 과소평가된 것 같습니다. TSMC 의존도 주의"</div>
+          <div class="disc-meta">
+            <span class="disc-vote">👍 38</span>
+            <span class="disc-tag">동아시아</span>
+            <span class="disc-tag">반도체</span>
+            <span>28분 전</span>
+          </div>
+        </div>
+        <div class="discussion-card">
+          <div class="disc-text">"방산주 아직 갈 수 있을까? 유럽 GDP 3% 방산 지출 확정"</div>
+          <div class="disc-meta">
+            <span class="disc-vote">👍 27</span>
+            <span class="disc-tag">동유럽</span>
+            <span class="disc-tag">방산</span>
+            <span>1시간 전</span>
+          </div>
+        </div>
+        <div class="discussion-card">
+          <div class="disc-text">"원/달러 1,350 돌파 — 지정학 리스크 헤지 전략은?"</div>
+          <div class="disc-meta">
+            <span class="disc-vote">👍 21</span>
+            <span class="disc-tag">환율</span>
+            <span class="disc-tag">포트폴리오</span>
+            <span>2시간 전</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
 
 <script>
-// ── 시계 ──
-function tick(){document.getElementById('lastUpdate').textContent=new Date().toLocaleString('ko-KR',{hour12:false,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+// ── Sidebar toggle ──
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sbOverlay').classList.toggle('on');
+}
+function navTo(section,btn){
+  document.querySelectorAll('.sb-item').forEach(function(el){el.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  if(window.innerWidth<=1024)toggleSidebar();
+  // Scroll to section
+  var targets={home:'metricsGrid',regions:'regionGrid',alerts:'alertBanner',trends:'trendList',community:'communityGrid'};
+  var el=document.getElementById(targets[section]);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function scrollToRegion(key){
+  if(window.innerWidth<=1024)toggleSidebar();
+  selectRegion(key);
+}
+
+// ── Clock ──
+function tick(){
+  var t=new Date().toLocaleString('ko-KR',{hour12:false,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  var el=document.getElementById('sbTime');if(el)el.textContent=t;
+}
 setInterval(tick,1000);tick();
 
-// ── 리스크 게이지 ──
-function updateGaugeColor(score,delta){var el=document.getElementById('gNum');var circle=document.getElementById('gCircle');var status=document.getElementById('gStatus');var deltaEl=document.getElementById('gDelta');if(el)el.textContent=score;if(circle){circle.style.strokeDashoffset=264*(1-score/100);if(score>=70){circle.style.stroke='#e03e3e';el.style.color='#e03e3e';}else if(score>=30){circle.style.stroke='#d4880f';el.style.color='#d4880f';}else{circle.style.stroke='#0a8a3e';el.style.color='#0a8a3e';}}if(status){if(score>=70){status.textContent='⚠ 위험 높음';status.style.color='#e03e3e';}else if(score>=30){status.textContent='◆ 보통';status.style.color='#d4880f';}else{status.textContent='✓ 안전';status.style.color='#0a8a3e';}}if(deltaEl&&delta!=null){var abs=Math.abs(delta);if(delta>0){deltaEl.textContent='▲ +'+abs+' 어제보다';deltaEl.style.color='#e03e3e';}else if(delta<0){deltaEl.textContent='▼ '+delta+' 어제보다';deltaEl.style.color='#0a8a3e';}else{deltaEl.textContent='— 어제와 동일';deltaEl.style.color='#8b949e';}deltaEl.style.display='block';}}
-
-// ── 좌측 네비게이션 토글 ──
-function toggleNav(){
-  document.getElementById('navSidebar').classList.toggle('open');
-  document.getElementById('navOverlay').classList.toggle('on');
-}
-function navSel(keyword, btn){
-  // 네비 아이템 활성화
-  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
-  if(btn) btn.classList.add('active');
-  // 지역 필터 찾기
-  var rc=Array.from(document.querySelectorAll('.rc')).find(function(el){
-    return el.getAttribute('onclick')&&el.getAttribute('onclick').includes(keyword);
-  });
-  if(rc){sel(rc,keyword);}else{
-    // 섹터 키워드로 뉴스 필터
-    filterNews(keyword);
-  }
-  // 모바일에서 자동 닫기
-  if(window.innerWidth<768)toggleNav();
+// ── Featured card region select ──
+function selectRegion(key){
+  // Scroll to featured card
+  document.getElementById('featuredCard').scrollIntoView({behavior:'smooth',block:'start'});
+  // Future: load region data via /api/region/[key]
+  console.log('[GeoWeather] Region selected:',key);
 }
 
-// ── 데모 뉴스 데이터 ──
-var NEWS=[
-{region:'러시아-우크라이나',tag:'war',tl:'전쟁',time:'방금',title:'러시아, 우크라이나 에너지 인프라 드론 공격 확대 — 동절기 재건 차질',summary:'러시아의 드론 공격이 우크라이나 전력망을 집중 타격하며 방산 수요가 확대되고 있습니다. LIG넥스원·한화에어로스페이스 등 국내 방산주에 단기 모멘텀이 형성될 전망입니다.',gain:['LIG넥스원','한화에어로','KAI'],loss:['두산에너빌'],horizon:'단기 ↑ · 중기 ↑',sector:'방산'},
-{region:'미-중 무역전쟁',tag:'trade',tl:'배터리',time:'12분',title:'미국, 중국산 전기차·배터리 관세 125% 추가 — 한국 배터리 반사이익',summary:'중국산 배터리에 대한 추가 관세 부과로 한국 배터리 3사(LG에너지·삼성SDI·SK온)가 미국 공급망 대안으로 부각되고 있습니다. 단기 수혜 가능성 높습니다.',gain:['LG에너지','삼성SDI','POSCO홀딩스'],loss:[],horizon:'단기 ↑ · 중기 ↑↑',sector:'배터리·소재'},
-{region:'중동 분쟁',tag:'energy',tl:'에너지',time:'28분',title:'이스라엘-하마스 협상 결렬 — 호르무즈 긴장, WTI 3% 급등',summary:'중동 협상이 완전히 결렬되며 원유 공급 불안이 고조되고 있습니다. WTI 3% 급등으로 국내 정유주 수혜가 예상되나 항공주는 연료비 부담으로 단기 조정이 우려됩니다.',gain:['S-Oil','GS홀딩스'],loss:['대한항공','제주항공'],horizon:'단기 ↑ · 중기 →',sector:'정유·항공'},
-{region:'미-중 무역전쟁',tag:'trade',tl:'반도체',time:'45분',title:'미 상무부, HBM 포함 고대역폭 메모리 대중 수출 추가 제한 검토',summary:'HBM(고대역폭 메모리) 대중 수출 규제 확대가 검토되면서 삼성전자·SK하이닉스의 중국 매출에 직접 타격이 우려됩니다. 단기 주가 하방 압력이 예상됩니다.',gain:['마이크론'],loss:['삼성전자','SK하이닉스'],horizon:'단기 ↓ · 중기 →',sector:'메모리 반도체'},
-{region:'대만해협',tag:'t-pol',tl:'지정학',time:'1시간',title:'중국 인민해방군, 대만 동·남부 해역 동시 훈련 실시',summary:'중국군이 대만 주변 해역에서 동시다발 훈련을 실시하며 반도체 공급망 불안이 재부각됩니다. TSMC 의존도가 높은 반도체 섹터 전반에 리스크 요인입니다.',gain:[],loss:['삼성전자','SK하이닉스','TSMC'],horizon:'단기 ↓ · 중기 ↓',sector:'반도체·전자'},
-{region:'유럽 에너지',tag:'energy',tl:'조선',time:'2시간',title:'유럽 LNG 재고 급감 — 한국 조선 3사 LNG선 수주 사이클 진입',summary:'유럽의 LNG 재고 감소로 추가 LNG선 발주가 이어질 전망입니다. 현대중공업·삼성중공업 등 국내 조선 3사가 수혜를 받으며 수주 사이클 진입이 기대됩니다.',gain:['현대중공업','삼성중공업','한국가스공사'],loss:[],horizon:'단기 ↑ · 중기 ↑↑',sector:'조선·LNG'},
-{region:'한반도',tag:'t-pol',tl:'한반도',time:'3시간',title:'한-미 연합훈련 규모 확대 발표 — 방산 수출 모멘텀 지속',summary:'한미 연합훈련 확대로 방산 장비 수요가 증가하고 있습니다. 국내 방산 기업들의 수출 계약 확대 기대감이 높아지며 LIG넥스원·KAI·한화시스템에 긍정적입니다.',gain:['LIG넥스원','KAI','한화시스템'],loss:[],horizon:'단기 ↑ · 중기 ↑',sector:'방위산업'},
-{region:'미-중 무역전쟁',tag:'market',tl:'환율',time:'4시간',title:'위안화 급락 속 달러-원 환율 1,350원 돌파',summary:'위안화 가치 하락과 달러 강세로 원/달러 환율이 1,350원을 돌파했습니다. 수출 비중이 높은 현대차·기아는 환차익 기대가 있으나 수입 원자재 비중이 큰 소비재주는 부담입니다.',gain:['현대차','기아'],loss:['롯데쇼핑','CJ제일제당'],horizon:'단기 → · 중기 →',sector:'자동차·소비재'}
-];
-var TAG_MAP={war:'t-war',trade:'t-trade',energy:'t-energy',market:'t-market','t-pol':'t-pol'};
-
-function renderNews(items){
-  var list=document.getElementById('newsList');
-  if(!items.length){list.innerHTML='<div class="loading-msg">📡 최신 리스크 데이터 불러오는 중...</div>';return;}
-  list.innerHTML=items.map(function(n){
-    var summaryHtml=n.summary?'<div class="n-summary"><span class="n-summary-lbl">AI 요약</span><span class="n-summary-txt">'+n.summary+'</span></div>':'';
-    return '<div class="ni"><div class="ni-top"><span class="nt '+(TAG_MAP[n.tag]||'t-trade')+'">'+n.tl+'</span><span class="n-region">'+n.region+'</span><span class="n-time">'+n.time+' 전</span></div><div class="n-title">'+n.title+'</div>'+summaryHtml+'<div class="n-impact"><div class="n-ic"><div class="n-ic-lbl lbl-g">▲ 수혜</div><div class="n-pills">'+(n.gain.length?n.gain.map(function(s){return '<span class="np np-g">'+s+'</span>'}).join(''):'<span style="font-size:9px;color:var(--text3)">—</span>')+'</div></div><div class="n-ic"><div class="n-ic-lbl lbl-r">▼ 피해</div><div class="n-pills">'+(n.loss.length?n.loss.map(function(s){return '<span class="np np-r">'+s+'</span>'}).join(''):'<span style="font-size:9px;color:var(--text3)">—</span>')+'</div></div><div class="n-ic"><div class="n-ic-lbl lbl-s">업종 / 방향</div><div class="horizon">'+n.sector+'<br><span style="font-size:10px;color:var(--text2)">'+n.horizon+'</span></div></div></div></div>';
-  }).join('');
-}
-renderNews(NEWS);
-
-function sel(el,r){
-  document.querySelectorAll('.rc').forEach(function(c){c.classList.remove('active');});
-  if(el)el.classList.add('active');
-  var f=NEWS.filter(function(n){return n.region===r;});
-  renderNews(f.length?f:NEWS);
-  document.getElementById('aiIn').value=r+' 관련 한국 주식 투자 전략은?';
-}
-function filterNews(q){
-  if(!q){renderNews(NEWS);return;}
-  var lq=q.toLowerCase();
-  renderNews(NEWS.filter(function(n){
-    return n.title.toLowerCase().includes(lq)||n.region.includes(lq)||n.sector.includes(lq)||n.gain.concat(n.loss).some(function(s){return s.toLowerCase().includes(lq);});
-  }));
-}
-function sp(t){document.getElementById('aiIn').value=t;document.getElementById('aiIn').focus();}
-
-// ── AI 데모 응답 ──
-var DEMO={'방산':'📌 방산주 투자 해석\n\n유럽 NATO 회원국의 방산 예산 확대(GDP 3%) 확정으로 한국 방산 수출 사이클 진입이 명확해졌습니다.\n\n▲ 수혜 종목\n• LIG넥스원 — 천궁-II 유럽 추가 수출 논의\n• 한화에어로스페이스 — K9 자주포 동유럽 수주\n• KAI — FA-50 수출 계약 확대\n\n단기: 이슈 발생 시마다 급등 → 분할 매수 권장\n중기: 방산 업사이클 2025-2027 지속 유효','반도체':'📌 반도체주 투자 해석\n\nHBM 수출 규제 확대로 삼성전자·SK하이닉스 중국향 매출 감소 우려가 단기 주가 하방 요인입니다.\n\n▼ 단기 리스크: 삼성전자, SK하이닉스\n▲ 중기 기회: AI 서버 수요(미국·유럽)가 공백 상쇄\n\n전략:\n• 단기(1-3M): 비중 축소 또는 관망\n• 중기(6-12M): 저점 분할 매수 기회','정유':'📌 정유·항공주 투자 해석\n\nWTI 90달러 이상 유지 시 정유사 정제마진 개선 기대.\n\n▲ 수혜: S-Oil, GS홀딩스\n▼ 피해: 대한항공, 제주항공\n\n전략: 정유주 단기 트레이딩. 분쟁 완화 시 빠른 차익실현 필수.','조선':'📌 조선·LNG주 투자 해석\n\n유럽 LNG 수요 구조적 증가로 한국 조선 3사 LNG선 수주 잔고 사상 최대 경신 중.\n\n▲ 수혜: 현대중공업, 삼성중공업, 한국가스공사\n\n단기: 수주 발표 시마다 주가 반응 → 모니터링 필수\n중기: 조선 업사이클 지속 전망 긍정적','헤지':'📌 지정학 헤지 포트폴리오\n\n현재 리스크 지수 77% — 헤지 자산 비중 확대 권장\n\n추천 구성:\n• 금 ETF 5-10%\n• 방산주 10-15%\n• 달러 자산 일부\n• 원자재 ETF 5%'};
-function askAI(){
-  var q=document.getElementById('aiIn').value.trim();if(!q)return;
-  var resp=document.getElementById('aiResp');var txt=document.getElementById('aiTxt');
-  resp.classList.add('on');txt.innerHTML='<span style="color:var(--text3)">분석 중...</span>';
-  setTimeout(function(){
-    var ans='📌 지정학 투자 분석\n\n현재 복합 지정학 리스크 지수 77%\n\n오늘 주목 섹터:\n🟢 방산 — 유럽 예산 확대 수혜\n🟢 조선/LNG — 에너지 안보 수요\n🟡 배터리 — 중국 관세 반사이익\n🔴 반도체 — 단기 변동성\n🔴 항공 — 유가 상승 비용';
-    if(q.includes('방산'))ans=DEMO['방산'];
-    else if(q.includes('반도체')||q.includes('삼성')||q.includes('하이닉스'))ans=DEMO['반도체'];
-    else if(q.includes('정유')||q.includes('유가')||q.includes('항공'))ans=DEMO['정유'];
-    else if(q.includes('조선')||q.includes('LNG'))ans=DEMO['조선'];
-    else if(q.includes('헤지')||q.includes('포트폴리오'))ans=DEMO['헤지'];
-    txt.innerHTML=ans.replace(/\n/g,'<br>');
-  },700);
-}
-
-// ── 리스크 보드 렌더링 ──
-function scoreClass(s){return s>=70?'s-high':s>=40?'s-med':'s-low';}
-function cardClass(s){return s>=70?'rc-high':s>=40?'rc-med':'rc-low';}
-function intensityKo(i){return i==='high'?'🔴 고강도':i==='medium'?'🟡 중강도':'🟢 저강도';}
-
-function renderTop3(items){
-  var el=document.getElementById('top3Strip');if(!el||!items.length)return;
-  el.innerHTML=items.map(function(r,i){
-    return '<div class="top3-card"><div class="top3-rank">#'+(i+1)+'</div>'
-      +'<div class="top3-name">'+r.flag_emoji+' '+r.label_ko+'</div>'
-      +'<div class="top3-score">'+r.total_score+'<span class="pct">%</span></div>'
-      +'<div class="top3-summary">'+r.summary_ko+'</div>'
-      +'<div class="score-axes">'
-      +'<div class="axis ax-mil"><div class="axis-lbl">군사 '+r.military_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.military_score+'%"></div></div></div>'
-      +'<div class="axis ax-pol"><div class="axis-lbl">정치 '+r.political_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.political_score+'%"></div></div></div>'
-      +'<div class="axis ax-mkt"><div class="axis-lbl">시장 '+r.market_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.market_score+'%"></div></div></div>'
-      +'</div></div>';
-  }).join('');
-}
-
-function renderRiskCard(r){
-  var hl=r.highlighted?' highlight':'';
-  var cls=cardClass(r.total_score);
-  var html='<div class="risk-card '+cls+hl+'">';
-  if(r.highlighted)html+='<div class="highlight-badge">⚠ 핵심 모니터링</div>';
-  html+='<div class="rk-top"><span class="rk-flag">'+r.flag_emoji+'</span>'
-    +'<div class="rk-score '+scoreClass(r.total_score)+'">'+r.total_score+'<span class="pct">%</span></div></div>'
-    +'<div class="rk-name">'+r.label_ko+'</div>'
-    +'<div class="rk-summary">'+r.summary_ko+'</div>'
-    +'<div class="rk-badges">';
-  if(r.intensity)html+='<span class="rk-badge rk-b-intensity">'+intensityKo(r.intensity)+'</span>';
-  if(r.end_probability!=null)html+='<span class="rk-badge rk-b-end">종전 확률 '+r.end_probability+'%</span>';
-  html+='</div>'
-    +'<div class="score-axes">'
-    +'<div class="axis ax-mil"><div class="axis-lbl">군사 '+r.military_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.military_score+'%"></div></div></div>'
-    +'<div class="axis ax-pol"><div class="axis-lbl">정치 '+r.political_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.political_score+'%"></div></div></div>'
-    +'<div class="axis ax-mkt"><div class="axis-lbl">시장 '+r.market_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.market_score+'%"></div></div></div>'
-    +'</div></div>';
-  return html;
-}
+// ── Risk Board rendering (from API) ──
+function levelClass(score){return score>=90?'lv-vh':score>=70?'lv-h':score>=50?'lv-m':'lv-l';}
+function levelKo(score){return score>=90?'매우 높음':score>=70?'높음':score>=50?'중간':'낮음';}
+function trendStr(d){return d>0?'↗ 상승':d<0?'↘ 하락':'— 유지';}
+function trendClass(d){return d>0?'t-up':d<0?'t-down':'t-flat';}
+function cardClass(score){return score>=90?'rc-vh':score>=70?'rc-h':score>=50?'rc-m':'rc-l';}
 
 function renderRiskBoard(board){
   if(!board)return;
-  // Top 3
-  renderTop3(board.top3||[]);
-  // 현재 전쟁
-  var og=document.getElementById('ongoingGrid');
-  if(og)og.innerHTML=(board.ongoingConflicts||[]).map(renderRiskCard).join('');
-  // 전쟁 가능성
-  var wr=document.getElementById('warRiskGrid');
-  if(wr)wr.innerHTML=(board.warRisks||[]).map(renderRiskCard).join('');
-  // 글로벌 리스크
-  var gr=document.getElementById('globalRiskGrid');
-  if(gr)gr.innerHTML=(board.globalRisks||[]).map(renderRiskCard).join('');
+  // Update gauge via existing updateGaugeColor if available
+  if(typeof updateGaugeColor==='function'){
+    updateGaugeColor(board.globalRiskIndex,board.globalRiskDelta);
+  }
+  // Update metrics
+  var avg=document.getElementById('mAvgScore');
+  if(avg)avg.textContent=board.globalRiskIndex;
+  var avgD=document.getElementById('mAvgDelta');
+  if(avgD&&board.globalRiskDelta!=null){
+    var d=board.globalRiskDelta;
+    avgD.textContent=(d>0?'+':'')+d;
+    avgD.className='mc-delta '+(d>0?'up':d<0?'down':'flat');
+  }
+  // Count high-risk regions
+  var all=[].concat(board.ongoingConflicts||[],board.warRisks||[],board.globalRisks||[]);
+  var high=all.filter(function(r){return r.total_score>=70;}).length;
+  var conflicts=(board.ongoingConflicts||[]).length;
+  var stable=all.filter(function(r){return r.total_score<40;}).length;
+  var hc=document.getElementById('mHighCount');if(hc)hc.textContent=high;
+  var cc=document.getElementById('mConflictCount');if(cc)cc.textContent=conflicts;
+  var sc=document.getElementById('mStableCount');if(sc)sc.textContent=stable;
+  var ac=document.getElementById('alertCount');if(ac)ac.textContent=high;
+
+  // Update featured card with top-1 region
+  if(board.top3&&board.top3.length>0){
+    var top=board.top3[0];
+    var fn=document.getElementById('ftName');if(fn)fn.textContent=top.label_ko;
+    var ff=document.querySelector('.ft-flag');if(ff)ff.textContent=top.flag_emoji;
+    var fs=document.getElementById('ftScore');if(fs){fs.textContent=top.total_score;fs.className='ft-score '+levelClass(top.total_score);}
+    var fl=document.getElementById('ftLevel');if(fl){fl.textContent=levelKo(top.total_score);fl.className='ft-level '+levelClass(top.total_score);}
+    // Risk rows
+    var ft=document.getElementById('ftTension');if(ft){ft.textContent=levelKo(top.military_score);ft.className='ft-row-value '+(top.military_score>=70?'val-high':top.military_score>=50?'val-med':'val-low');}
+    var fst=document.getElementById('ftStability');if(fst){var pScore=top.political_score;fst.textContent=pScore>=80?'매우 불안정':pScore>=60?'불안정':pScore>=40?'보통':'안정';fst.className='ft-row-value '+(pScore>=70?'val-high':pScore>=50?'val-med':'val-low');}
+    var fm=document.getElementById('ftMarket');if(fm){fm.textContent=levelKo(top.market_score);fm.className='ft-row-value '+(top.market_score>=70?'val-high':top.market_score>=50?'val-med':'val-low');}
+    var fol=document.getElementById('ftOneliner');if(fol)fol.textContent=top.summary_ko;
+  }
 }
 
-// ── 데모 리스크 보드 (API 미연결 시 폴백) ──
-var DEMO_RISK_BOARD={
-  top3:[
-    {flag_emoji:'🇺🇦🇷🇺',label_ko:'러시아-우크라이나 전쟁',total_score:86,military_score:92,political_score:85,market_score:78,summary_ko:'전면전 지속 중. 에너지·곡물 시장 직접 영향.'},
-    {flag_emoji:'🇮🇱🇵🇸',label_ko:'이스라엘-팔레스타인 분쟁',total_score:82,military_score:88,political_score:82,market_score:72,summary_ko:'가자 교전 지속. 중동 원유 리스크 상존.'},
-    {flag_emoji:'🇹🇼🇨🇳',label_ko:'대만해협',total_score:81,military_score:72,political_score:80,market_score:95,summary_ko:'반도체 공급망 글로벌 최대 리스크. TSMC 의존도 핵심.'}
-  ],
-  ongoingConflicts:[
-    {flag_emoji:'🇺🇦🇷🇺',label_ko:'러시아-우크라이나 전쟁',total_score:86,military_score:92,political_score:85,market_score:78,summary_ko:'전면전 지속 중. 양측 소모전 양상. 에너지·곡물 시장 직접 영향.',intensity:'high',end_probability:8,highlighted:false},
-    {flag_emoji:'🇮🇱🇵🇸',label_ko:'이스라엘-팔레스타인 분쟁',total_score:82,military_score:88,political_score:82,market_score:72,summary_ko:'가자 교전 지속. 레바논·이란 확전 우려. 중동 원유 리스크 상존.',intensity:'high',end_probability:12,highlighted:false},
-    {flag_emoji:'🇸🇩',label_ko:'수단 내전',total_score:59,military_score:75,political_score:60,market_score:35,summary_ko:'RSF vs SAF 내전 장기화. 인도주의 위기. 직접적 시장 영향은 제한적.',intensity:'medium',end_probability:15,highlighted:false},
-    {flag_emoji:'🇲🇲',label_ko:'미얀마 내전',total_score:53,military_score:68,political_score:55,market_score:30,summary_ko:'저항군 vs 군부. 희토류·주석 공급 일부 영향.',intensity:'medium',end_probability:10,highlighted:false}
-  ],
-  warRisks:[
-    {flag_emoji:'🇹🇼🇨🇳',label_ko:'대만해협',total_score:81,military_score:72,political_score:80,market_score:95,summary_ko:'중국 군사훈련 증가. 반도체 공급망 글로벌 최대 리스크. TSMC 의존도 핵심.',highlighted:true},
-    {flag_emoji:'🇮🇷🇮🇱',label_ko:'이란-이스라엘',total_score:75,military_score:70,political_score:75,market_score:82,summary_ko:'핵 프로그램 갈등. 직접 군사 충돌 시 원유 가격 급등 시나리오.',highlighted:false},
-    {flag_emoji:'🇰🇷🇰🇵',label_ko:'한반도',total_score:67,military_score:65,political_score:70,market_score:68,summary_ko:'북한 핵·미사일 위협 지속. 남북 긴장 고조. 한국 방산주 직접 영향.',highlighted:false},
-    {flag_emoji:'🌊',label_ko:'남중국해',total_score:58,military_score:58,political_score:62,market_score:55,summary_ko:'중국-필리핀 해상 충돌 반복. 세계 해상 무역 30% 통과 해역.',highlighted:false}
-  ],
-  globalRisks:[
-    {flag_emoji:'⛽',label_ko:'호르무즈 해협',total_score:70,military_score:55,political_score:65,market_score:92,summary_ko:'세계 원유 20% 통과. 이란 봉쇄 시 에너지 가격 급등.',highlighted:false},
-    {flag_emoji:'🇺🇸🇨🇳',label_ko:'미-중 무역전쟁',total_score:67,military_score:30,political_score:85,market_score:90,summary_ko:'관세·기술 수출통제 강화. 반도체·AI·배터리 공급망 재편 중.',highlighted:false},
-    {flag_emoji:'🚢',label_ko:'글로벌 공급망 교란',total_score:53,military_score:25,political_score:50,market_score:85,summary_ko:'홍해 후티 공격, 파나마 운하 가뭄. 해운비 급등.',highlighted:false},
-    {flag_emoji:'⚡',label_ko:'유럽 에너지 위기',total_score:51,military_score:20,political_score:60,market_score:75,summary_ko:'LNG 의존도 증가. 러시아 가스 차단 장기화.',highlighted:false},
-    {flag_emoji:'🧊',label_ko:'북극·그린란드',total_score:45,military_score:35,political_score:55,market_score:48,summary_ko:'희토류·자원 경쟁. 미국-덴마크 그린란드 긴장.',highlighted:false}
-  ]
-};
-renderRiskBoard(DEMO_RISK_BOARD);
-
-// ── 속보 자동 업데이트 ──
-var ALERTS=[{i:'🔴',t:'<strong>러시아</strong> 발틱해 군사 활동 증가'},{i:'🟡',t:'<strong>중국</strong> 희토류 추가 수출 제한 검토'},{i:'🟢',t:'<strong>NATO</strong> 방산 지출 GDP 3% 합의'}];
-var alertIdx=0;
-setInterval(function(){
-  var box=document.getElementById('alerts');
-  var a=ALERTS[alertIdx++%ALERTS.length];
-  var d=document.createElement('div');d.className='al';
-  d.innerHTML='<div class="al-i">'+a.i+'</div><div class="al-t">'+a.t+'</div>';
-  box.insertBefore(d,box.firstChild);
-  if(box.children.length>5)box.removeChild(box.lastChild);
-},10000);
+// ── Gauge (compatibility) ──
+function updateGaugeColor(score,delta){}
 </script>
 <script src="/api-bridge.js"></script>
 </body>

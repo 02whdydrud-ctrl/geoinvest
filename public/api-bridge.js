@@ -1,15 +1,12 @@
 // ═══════════════════════════════════════════
-//  GeoInvest — 프론트엔드 API 연동 스크립트
-//  기존 HTML 대시보드의 하드코딩 데이터를
-//  /api 엔드포인트 호출로 교체한다.
+//  GeoInvest — GeoWeather 프론트엔드 API 연동
+//  v3: GeoWeather MVP 대시보드 전용
 //
-//  사용법: 기존 HTML의 <script> 블록 바로 위에
-//         <script src="/api-bridge.js"></script> 추가
-//
-//  또는 이 내용을 기존 <script> 블록 맨 위에 붙여넣기
+//  dashboard.html의 renderRiskBoard()가 핵심 렌더링 담당.
+//  이 스크립트는 API 호출 + 보조 UI 업데이트만 수행.
 // ═══════════════════════════════════════════
 
-const API_BASE = ''; // 같은 도메인이면 빈 문자열, 아니면 'https://your-api.vercel.app'
+const API_BASE = ''; // 같은 도메인이면 빈 문자열
 
 // ─── 1. 메인 데이터 로드 (/api/home) ───
 
@@ -19,323 +16,251 @@ async function loadHome() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // 시그널 카드 업데이트
-    if (data.signals?.length) {
-      renderSignals(data.signals);
-    }
-
-    // 뉴스 리스트 업데이트
-    if (data.articles?.length) {
-      renderNewsFromAPI(data.articles);
-    }
-
-    // 리스크 게이지 업데이트
-    if (data.riskIndex != null) {
-      updateGauge(data.riskIndex, data.riskDelta ?? null);
-    }
-
-    // 알림 업데이트
-    if (data.alerts?.length) {
-      renderAlerts(data.alerts);
-    }
-
-    // v2: 리스크 보드 업데이트 (3섹션 시스템)
+    // 리스크 보드 (핵심 — dashboard.html의 renderRiskBoard에 위임)
     if (data.riskBoard && typeof renderRiskBoard === 'function') {
       renderRiskBoard(data.riskBoard);
     }
 
-    console.log(`[GeoInvest] 홈 데이터 로드 완료 (${data.updatedAt})`);
+    // 알림 배너 업데이트
+    if (data.alerts?.length) {
+      updateAlertBanner(data.alerts);
+    }
+
+    // 지역 카드 업데이트 (리스크 보드에서 보강)
+    if (data.riskBoard) {
+      updateRegionCards(data.riskBoard);
+      updateTrendList(data.riskBoard);
+    }
+
+    // 사이드바 시간
+    const sbTime = document.getElementById('sbTime');
+    if (sbTime && data.updatedAt) {
+      const t = new Date(data.updatedAt);
+      sbTime.textContent = t.toLocaleString('ko-KR', {
+        hour12: false, month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    console.log(`[GeoWeather] 데이터 로드 완료 (${data.updatedAt})`);
   } catch (err) {
-    console.warn('[GeoInvest] API 연결 실패 — 데모 데이터 유지:', err.message);
-    // 실패 시 기존 하드코딩 데이터 그대로 유지
+    console.warn('[GeoWeather] API 연결 실패 — 데모 데이터 유지:', err.message);
   }
 }
 
-// ─── 2. 시그널 카드 렌더 ───
+// ─── 2. 알림 배너 업데이트 ───
 
-function renderSignals(signals) {
-  const grid = document.querySelector('.signals-grid');
+function updateAlertBanner(alerts) {
+  const banner = document.getElementById('alertBanner');
+  if (!banner) return;
+
+  // 가장 심각한 알림 선택
+  const redAlerts = alerts.filter(a => a.level === 'red');
+  const yellowAlerts = alerts.filter(a => a.level === 'yellow');
+  const top = redAlerts[0] || yellowAlerts[0] || alerts[0];
+  if (!top) return;
+
+  const isRed = top.level === 'red';
+  banner.className = isRed ? 'alert-banner' : 'alert-banner warn';
+
+  const textEl = banner.querySelector('.alert-text');
+  if (textEl) {
+    const label = isRed ? '고위험 경보' : '주의 경보';
+    const regions = [...new Set(alerts
+      .filter(a => a.level === 'red' || a.level === 'yellow')
+      .map(a => a.region)
+      .filter(Boolean)
+    )].slice(0, 3).join('·');
+
+    textEl.innerHTML = `<strong>${label}</strong> — ${regions ? regions + ' 지역의 ' : ''}${top.text}`;
+  }
+
+  banner.style.display = 'flex';
+}
+
+// ─── 3. 지역 카드 동적 업데이트 ───
+
+// 리스크 보드 데이터 → 지역 카드에 실시간 반영
+const REGION_CARD_MAP = {
+  'east-asia': { flag: '🌏', name: '동아시아' },
+  'middle-east': { flag: '🌍', name: '중동' },
+  'east-europe': { flag: '🇺🇦', name: '동유럽' },
+  'south-asia': { flag: '🌏', name: '남아시아' },
+  'africa': { flag: '🌍', name: '아프리카' },
+  'latin-america': { flag: '🌎', name: '남미' },
+  'north-america': { flag: '🇺🇸', name: '북미' },
+  'west-europe': { flag: '🇪🇺', name: '서유럽' },
+};
+
+// DB region_key → 카드 key 매핑
+const DB_TO_CARD_KEY = {
+  '동아시아': 'east-asia',
+  '중동': 'middle-east',
+  '동유럽': 'east-europe',
+  '남아시아': 'south-asia',
+  '아프리카': 'africa',
+  '남미': 'latin-america',
+  '북미': 'north-america',
+  '서유럽': 'west-europe',
+  'east_asia': 'east-asia',
+  'middle_east': 'middle-east',
+  'eastern_europe': 'east-europe',
+  'south_asia': 'south-asia',
+  'africa': 'africa',
+  'latin_america': 'latin-america',
+  'north_america': 'north-america',
+  'western_europe': 'west-europe',
+};
+
+function levelClass(score) { return score >= 90 ? 'lv-vh' : score >= 70 ? 'lv-h' : score >= 50 ? 'lv-m' : 'lv-l'; }
+function levelKo(score) { return score >= 90 ? '매우 높음' : score >= 70 ? '높음' : score >= 50 ? '중간' : '낮음'; }
+function cardClass(score) { return score >= 90 ? 'rc-vh' : score >= 70 ? 'rc-h' : score >= 50 ? 'rc-m' : 'rc-l'; }
+function trendClass(d) { return d > 0 ? 't-up' : d < 0 ? 't-down' : 't-flat'; }
+function trendStr(d) { return d > 0 ? '↗' : d < 0 ? '↘' : '—'; }
+
+function updateRegionCards(board) {
+  const grid = document.getElementById('regionGrid');
   if (!grid) return;
 
-  const urgencyMap = {
-    critical: { cls: 's-red', badge: 'sb-red', icon: '🔴 긴급 주목' },
-    opportunity: { cls: 's-green', badge: 'sb-green', icon: '🟢 수혜 기회' },
-    monitor: { cls: 's-yellow', badge: 'sb-yellow', icon: '🟡 모니터링' },
-  };
+  // 모든 리스크 항목을 하나로 합침
+  const all = [
+    ...(board.ongoingConflicts || []),
+    ...(board.warRisks || []),
+    ...(board.globalRisks || []),
+  ];
 
-  grid.innerHTML = signals.slice(0, 3).map((s, i) => {
-    const u = urgencyMap[s.urgency] || urgencyMap.monitor;
-    const gain = (s.tickers_gain || []);
-    const loss = (s.tickers_loss || []);
+  // 지역별로 그룹핑 (같은 지역의 여러 항목 → 최고점 사용)
+  const regionScores = {};
+  for (const item of all) {
+    const key = DB_TO_CARD_KEY[item.region_key] || DB_TO_CARD_KEY[item.label_ko];
+    if (!key) continue;
+
+    if (!regionScores[key] || item.total_score > regionScores[key].score) {
+      regionScores[key] = {
+        score: item.total_score,
+        issues: regionScores[key]?.issues || [],
+      };
+    }
+    if (item.label_ko) {
+      regionScores[key].issues = regionScores[key].issues || [];
+      if (!regionScores[key].issues.includes(item.label_ko)) {
+        regionScores[key].issues.push(item.label_ko);
+      }
+    }
+  }
+
+  // 카드 HTML 갱신
+  const keys = Object.keys(REGION_CARD_MAP);
+  grid.innerHTML = keys.map(key => {
+    const info = REGION_CARD_MAP[key];
+    const data = regionScores[key] || { score: 30, issues: [] };
+    const score = data.score;
+    const issues = data.issues.slice(0, 3);
+    // delta는 현재 API에 없으므로 0으로 표시
+    const delta = 0;
 
     return `
-      <div class="signal-card ${u.cls}">
-        <div class="signal-top">
-          <span class="signal-num">시그널 0${i + 1}</span>
-          <span class="signal-badge ${u.badge}">${u.icon}</span>
-        </div>
-        <div class="signal-headline">${s.title}</div>
-        <div class="signal-impact">
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-gain">▲ 수혜</div>
-            <div class="impact-pills">
-              ${gain.length ? gain.map(t => `<span class="pill pill-gain">${t}</span>`).join('') : '<span class="pill" style="color:var(--text3)">없음</span>'}
-            </div>
+      <div class="region-card ${cardClass(score)}" onclick="selectRegion('${key}')">
+        <div class="rg-top">
+          <div class="rg-info">
+            <div class="rg-name">${info.flag} ${info.name}</div>
+            <div class="rg-level ${levelClass(score)}">${levelKo(score)} <span class="rg-trend ${trendClass(delta)}">${trendStr(delta)}</span></div>
           </div>
-          <div class="impact-col">
-            <div class="impact-col-lbl lbl-loss">▼ 피해</div>
-            <div class="impact-pills">
-              ${loss.length ? loss.map(t => `<span class="pill pill-loss">${t}</span>`).join('') : '<span class="pill" style="color:var(--text3)">없음</span>'}
-            </div>
+          <div>
+            <div class="rg-score ${levelClass(score)}">${score}</div>
+            <div class="rg-score-sub">위험 지수</div>
           </div>
         </div>
-        <div class="signal-sector">${(s.sectors || []).join(' · ')}</div>
+        <div class="rg-issues">
+          ${issues.map(i => `<div class="rg-issue">${i}</div>`).join('')}
+        </div>
       </div>`;
   }).join('');
 }
 
-// ─── 3. 뉴스 리스트 렌더 (API 데이터용) ───
+// ─── 4. 추세 리스트 업데이트 ───
 
-const TAG_CLASS = {
-  war: 't-war', trade: 't-trade', energy: 't-energy',
-  market: 't-market', political: 't-pol',
-};
-
-const TAG_LABEL = {
-  war: '전쟁', trade: '무역', energy: '에너지',
-  market: '시장', political: '지정학',
-};
-
-function renderNewsFromAPI(articles) {
-  const list = document.getElementById('newsList');
+function updateTrendList(board) {
+  const list = document.getElementById('trendList');
   if (!list) return;
 
-  list.innerHTML = articles.map(a => {
-    const tagCls = TAG_CLASS[a.risk_type] || 't-trade';
-    const tagLbl = TAG_LABEL[a.risk_type] || a.risk_type || '뉴스';
-    const gain = a.tickers_gain || [];
-    const loss = a.tickers_loss || [];
-    const timeAgo = getTimeAgo(a.published_at);
+  const all = [
+    ...(board.ongoingConflicts || []),
+    ...(board.warRisks || []),
+    ...(board.globalRisks || []),
+  ];
 
+  // 지역별 최고점 집계
+  const regionMap = {};
+  for (const item of all) {
+    const labelKey = item.label_ko || item.region_key;
+    if (!regionMap[labelKey] || item.total_score > regionMap[labelKey].score) {
+      regionMap[labelKey] = {
+        name: item.flag_emoji ? `${item.flag_emoji} ${item.label_ko}` : item.label_ko,
+        score: item.total_score,
+      };
+    }
+  }
+
+  // 상위 5개
+  const sorted = Object.values(regionMap)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  list.innerHTML = sorted.map((r, i) => {
+    const lc = levelClass(r.score);
+    const color = r.score >= 70 ? 'var(--red)' : r.score >= 50 ? 'var(--orange)' : 'var(--yellow)';
     return `
-      <div class="ni" onclick="window.open('${a.url}','_blank')">
-        <div class="ni-top">
-          <span class="nt ${tagCls}">${tagLbl}</span>
-          <span class="n-region">${a.region || ''}</span>
-          <span class="n-time">${timeAgo}</span>
-        </div>
-        <div class="n-title">${a.title}</div>
-        ${a.summary ? `<div class="n-summary"><span class="n-summary-lbl">AI 요약</span><span class="n-summary-txt">${a.summary}</span></div>` : ''}
-        <div class="n-impact">
-          <div class="n-ic">
-            <div class="n-ic-lbl lbl-g">▲ 수혜</div>
-            <div class="n-pills">${gain.length ? gain.map(s => `<span class="np np-g">${s}</span>`).join('') : '<span style="font-size:9px;color:var(--text3)">—</span>'}</div>
-          </div>
-          <div class="n-ic">
-            <div class="n-ic-lbl lbl-r">▼ 피해</div>
-            <div class="n-pills">${loss.length ? loss.map(s => `<span class="np np-r">${s}</span>`).join('') : '<span style="font-size:9px;color:var(--text3)">—</span>'}</div>
-          </div>
-          <div class="n-ic">
-            <div class="n-ic-lbl lbl-s">업종 / 방향</div>
-            <div class="horizon">${(a.sectors || []).join(' · ')}<br><span style="font-size:10px;color:var(--text2)">${a.impact_horizon || ''}</span></div>
-          </div>
-        </div>
+      <div class="trend-row">
+        <span class="trend-rank">${i + 1}</span>
+        <span class="trend-name">${r.name}</span>
+        <div class="trend-bar"><div class="trend-bar-fill ${lc}" style="width:${r.score}%"></div></div>
+        <span class="trend-score" style="color:${color}">${r.score}</span>
+        <span class="trend-delta" style="color:var(--text3)">—</span>
       </div>`;
   }).join('');
 }
 
-function getTimeAgo(isoStr) {
-  const diff = Date.now() - new Date(isoStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return '방금';
-  if (mins < 60) return `${mins}분 전`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}시간 전`;
-  return `${Math.floor(hrs / 24)}일 전`;
-}
+// ─── 5. AI 분석 연동 (/api/ask-ai) ───
+// 향후 대시보드에 AI 질의 기능 추가 시 사용
 
-// ─── 4. 리스크 게이지 업데이트 ───
-
-function updateGauge(score, delta) {
-  // 새 대시보드의 updateGaugeColor 함수 호출 (dashboard.html에 정의됨)
-  if (typeof updateGaugeColor === 'function') {
-    updateGaugeColor(score, delta);
-    return;
-  }
-  // 폴백
-  const circle = document.getElementById('gCircle');
-  const numEl = document.getElementById('gNum') || document.querySelector('.g-num');
-  const statusEl = document.getElementById('gStatus') || document.querySelector('.g-status');
-  const deltaEl = document.getElementById('gDelta') || document.querySelector('.g-delta');
-
-  if (numEl) numEl.textContent = String(score);
-
-  if (circle) {
-    const offset = 264 * (1 - score / 100);
-    circle.style.strokeDashoffset = String(offset);
-    if (score >= 70) { circle.style.stroke = '#e03e3e'; if(numEl) numEl.style.color = '#e03e3e'; }
-    else if (score >= 30) { circle.style.stroke = '#d4880f'; if(numEl) numEl.style.color = '#d4880f'; }
-    else { circle.style.stroke = '#0a8a3e'; if(numEl) numEl.style.color = '#0a8a3e'; }
-  }
-
-  if (statusEl) {
-    if (score >= 70) { statusEl.textContent = '⚠ 위험 높음'; statusEl.style.color = '#e03e3e'; }
-    else if (score >= 30) { statusEl.textContent = '◆ 보통'; statusEl.style.color = '#d4880f'; }
-    else { statusEl.textContent = '✓ 안전'; statusEl.style.color = '#0a8a3e'; }
-  }
-
-  // 어제 대비 변화 표시
-  if (deltaEl && delta != null) {
-    const abs = Math.abs(delta);
-    if (delta > 0) {
-      deltaEl.textContent = `▲ +${abs} 어제보다`;
-      deltaEl.style.color = '#e03e3e';
-    } else if (delta < 0) {
-      deltaEl.textContent = `▼ ${delta} 어제보다`;
-      deltaEl.style.color = '#0a8a3e';
-    } else {
-      deltaEl.textContent = '— 어제와 동일';
-      deltaEl.style.color = '#8b949e';
-    }
-    deltaEl.style.display = 'block';
-  }
-}
-
-// ─── 5. 알림 업데이트 ───
-
-function renderAlerts(alerts) {
-  const box = document.getElementById('alerts');
-  if (!box) return;
-
-  const icons = { red: '🔴', yellow: '🟡', green: '🟢' };
-
-  box.innerHTML = alerts.slice(0, 5).map(a => `
-    <div class="al">
-      <div class="al-i">${icons[a.level] || '🟡'}</div>
-      <div class="al-t">${a.text}</div>
-    </div>
-  `).join('');
-}
-
-// ─── 6. AI 분석 연동 (/api/ask-ai) ───
-
-async function askAI_API() {
-  const input = document.getElementById('aiIn');
-  const resp = document.getElementById('aiResp');
-  const txt = document.getElementById('aiTxt');
-  const q = input?.value?.trim();
-
-  if (!q) return;
-
-  resp.classList.add('on');
-  txt.innerHTML = '<span style="color:var(--text3)">AI 분석 중...</span>';
-
+async function askAI_API(question) {
   try {
     const res = await fetch(`${API_BASE}/api/ask-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q }),
+      body: JSON.stringify({ question }),
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    let html = data.answer.replace(/\n/g, '<br>');
-
-    if (data.relatedTickers?.length) {
-      html += '<br><div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">';
-      data.relatedTickers.forEach(t => {
-        html += `<span class="np np-g">${t}</span>`;
-      });
-      html += '</div>';
-    }
-
-    if (data.disclaimer) {
-      html += `<div style="margin-top:8px;font-size:9px;color:var(--text3);">${data.disclaimer}</div>`;
-    }
-
-    txt.innerHTML = html;
+    return await res.json();
   } catch (err) {
-    console.warn('[GeoInvest] AI API 실패 — 데모 응답 사용:', err.message);
-    throw err; // override의 .catch()에서 originalAskAI 호출
+    console.warn('[GeoWeather] AI API 실패:', err.message);
+    return null;
   }
 }
 
-// ─── 7. 구독 연동 (/api/subscribe) ───
+// ─── 6. 구독 연동 (/api/subscribe) ───
+// 향후 이메일 구독 UI 추가 시 사용
 
-async function subscribe_API() {
-  const emailInput = document.getElementById('emailIn');
-  const btn = document.getElementById('subBtn');
-  const email = emailInput?.value?.trim();
-
-  if (!email || !email.includes('@')) {
-    emailInput.style.borderColor = 'var(--accent2)';
-    return;
-  }
-
+async function subscribe_API(email) {
   try {
     const res = await fetch(`${API_BASE}/api/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
-
-    const data = await res.json();
-
-    emailInput.style.borderColor = 'var(--accent3)';
-    btn.textContent = '✓ 구독 완료!';
-    btn.style.background = 'var(--accent3)';
+    return await res.json();
   } catch (err) {
-    console.warn('[GeoInvest] 구독 API 실패:', err.message);
-    throw err; // override의 .catch()에서 originalSubscribe 호출
+    console.warn('[GeoWeather] 구독 API 실패:', err.message);
+    return null;
   }
 }
 
-// ─── 8. 지역 필터 연동 (/api/news?region=...) ───
+// ─── 7. 초기화 ───
 
-async function filterByRegion(region) {
-  try {
-    const res = await fetch(`${API_BASE}/api/news?region=${encodeURIComponent(region)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (data.articles?.length) {
-      renderNewsFromAPI(data.articles);
-    }
-  } catch (err) {
-    console.warn('[GeoInvest] 뉴스 필터 실패:', err.message);
-  }
-}
-
-// ─── 9. 초기화 — 기존 함수 오버라이드 ───
-
-// 페이지 로드 시 API 데이터로 교체 시도
 document.addEventListener('DOMContentLoaded', () => {
+  // 첫 로드
   loadHome();
-
-  // 기존 askAI 함수를 API 버전으로 교체
-  // (기존 데모 함수는 폴백으로 유지)
-  const originalAskAI = window.askAI;
-  window.askAI = function () {
-    askAI_API().catch(() => {
-      if (originalAskAI) originalAskAI();
-    });
-  };
-
-  // 기존 subscribe 함수를 API 버전으로 교체
-  const originalSubscribe = window.subscribe;
-  window.subscribe = function () {
-    subscribe_API().catch(() => {
-      if (originalSubscribe) originalSubscribe();
-    });
-  };
-
-  // 기존 sel 함수에 API 필터 추가
-  const originalSel = window.sel;
-  window.sel = function (el, region) {
-    if (originalSel) originalSel(el, region);
-    filterByRegion(region);
-  };
 
   // 30초마다 자동 새로고침
   setInterval(loadHome, 30000);
