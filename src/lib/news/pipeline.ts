@@ -105,7 +105,7 @@ export async function runPipeline(): Promise<{
     const summaries = await summarizeTop(toSummarize, 5);
 
     // 요약 결과를 DB에 업데이트 — URL 기준 (유니크)
-    for (const [url, summary] of Array.from(summaries.entries())) {
+    for (const [url, summary] of summaries) {
       await supabase
         .from('articles')
         .update({ summary })

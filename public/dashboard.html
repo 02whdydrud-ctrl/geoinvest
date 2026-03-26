@@ -141,7 +141,6 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:20px 24p
   <div class="header-right">
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
     <div class="clock" id="clock">--:--:--</div>
-    <button class="btn-sub-sm" onclick="document.getElementById('sub').scrollIntoView({behavior:'smooth'})">무료 구독</button>
   </div>
 </header>
 <div class="ticker">
@@ -235,7 +234,7 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:20px 24p
       <div class="g-inner">
         <div class="g-ring">
           <svg width="100" height="100" viewBox="0 0 100 100"><circle class="g-bg" cx="50" cy="50" r="42"/><circle class="g-fill" cx="50" cy="50" r="42" stroke="#ff4757" stroke-dasharray="264" stroke-dashoffset="61" id="gCircle"/></svg>
-          <div class="g-center"><div class="g-num">77</div><div class="g-unit">/100</div></div>
+          <div class="g-center"><div class="g-num">77</div><div class="g-unit">%</div></div>
         </div>
         <div class="g-status">⚠ 고위험 구간</div>
         <div class="g-desc">복합 지정학 리스크<br>높은 수준 지속</div>
@@ -266,11 +265,6 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:20px 24p
         <div class="al"><div class="al-i">🟡</div><div class="al-t"><strong>대만</strong> 중국 해군 동·남중국해 훈련</div></div>
       </div>
     </div>
-  </div>
-  <div class="sub-banner" id="sub">
-    <div class="sub-copy"><h3>매일 아침 8시, <em>오늘의 지정학 투자 브리핑</em></h3><p>어젯밤 글로벌 이슈 → 오늘 주목 섹터·종목을 3분 안에 파악</p></div>
-    <div class="sub-perks"><div class="perk">매일 아침 8시 이메일 발송</div><div class="perk">오늘의 수혜/피해 업종 TOP 3</div><div class="perk">완전 무료 · 언제든 해지 가능</div></div>
-    <div class="sub-form"><input class="sub-in" type="email" id="emailIn" placeholder="이메일 주소 입력"><button class="btn-sub" id="subBtn" onclick="subscribe()">무료 구독하기</button></div>
   </div>
 </main>
 
@@ -315,7 +309,7 @@ var DEMO={
   '반도체':'📌 반도체주 투자 해석\n\nHBM 수출 규제 확대로 삼성전자·SK하이닉스 중국향 매출 감소 우려가 단기 주가 하방 요인입니다.\n\n▼ 단기 리스크: 삼성전자, SK하이닉스\n▲ 중기 기회: AI 서버 수요(미국·유럽)가 공백 상쇄\n\n전략:\n• 단기(1-3M): 비중 축소 또는 관망\n• 중기(6-12M): 저점 분할 매수 기회\n\n⚠ 데모 버전',
   '정유':'📌 정유·항공주 투자 해석\n\nWTI 90달러 이상 유지 시 정유사 정제마진 개선 기대. 단, 항공주는 연료비 상승 부담.\n\n▲ 수혜: S-Oil, GS홀딩스\n▼ 피해: 대한항공, 제주항공\n\n전략: 정유주 단기 트레이딩. 분쟁 완화 시 빠른 차익실현 필수.\n\n⚠ 데모 버전',
   '조선':'📌 조선·LNG주 투자 해석\n\n유럽 LNG 수요 구조적 증가로 한국 조선 3사 LNG선 수주 잔고 사상 최대 경신 중.\n\n▲ 수혜: 현대중공업, 삼성중공업, 한국가스공사\n\n단기: 수주 발표 시마다 주가 반응 → 모니터링 필수\n중기: 조선 업사이클 지속 전망 긍정적\n\n⚠ 데모 버전',
-  '헤지':'📌 지정학 헤지 포트폴리오\n\n현재 리스크 지수 77/100 — 헤지 자산 비중 확대 권장\n\n추천 구성:\n• 금 ETF 5-10%\n• 방산주 10-15%\n• 달러 자산 일부\n• 원자재 ETF 5%\n\n⚠ 데모 버전',
+  '헤지':'📌 지정학 헤지 포트폴리오\n\n현재 리스크 지수 77% — 헤지 자산 비중 확대 권장\n\n추천 구성:\n• 금 ETF 5-10%\n• 방산주 10-15%\n• 달러 자산 일부\n• 원자재 ETF 5%\n\n⚠ 데모 버전',
 };
 
 function askAI(){
@@ -326,7 +320,7 @@ function askAI(){
   resp.classList.add('on');
   txt.innerHTML='<span style="color:var(--text3)">분석 중...</span>';
   setTimeout(function(){
-    var ans='📌 지정학 투자 분석\n\n현재 복합 지정학 리스크 지수 77/100\n\n오늘 주목 섹터:\n🟢 방산 — 유럽 예산 확대 수혜\n🟢 조선/LNG — 에너지 안보 수요\n🟡 배터리 — 중국 관세 반사이익\n🔴 반도체 — 단기 변동성\n🔴 항공 — 유가 상승 비용\n\n⚠ 데모 버전';
+    var ans='📌 지정학 투자 분석\n\n현재 복합 지정학 리스크 지수 77%\n\n오늘 주목 섹터:\n🟢 방산 — 유럽 예산 확대 수혜\n🟢 조선/LNG — 에너지 안보 수요\n🟡 배터리 — 중국 관세 반사이익\n🔴 반도체 — 단기 변동성\n🔴 항공 — 유가 상승 비용\n\n⚠ 데모 버전';
     if(q.includes('방산'))ans=DEMO['방산'];
     else if(q.includes('반도체')||q.includes('삼성')||q.includes('하이닉스'))ans=DEMO['반도체'];
     else if(q.includes('정유')||q.includes('유가')||q.includes('항공'))ans=DEMO['정유'];
