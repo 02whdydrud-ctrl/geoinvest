@@ -68,6 +68,7 @@ export interface HomeResponse {
   articles: Article[];
   riskIndex: number;
   riskDelta: number | null;   // 어제 대비 변화 (null = 비교 불가)
+  riskBoard: RiskBoard;       // v2: 3분류 리스크 평가 보드
   marketData: MarketTick[];
   alerts: AlertItem[];
   updatedAt: string;
@@ -85,6 +86,51 @@ export interface AlertItem {
   text: string;
   region: Region;
   timestamp: string;
+}
+
+// ─── 리스크 평가 시스템 (v2 Core) ───
+
+/** 리스크 카테고리 3분류 */
+export type RiskCategory =
+  | 'ongoing_conflict'   // 현재 전쟁
+  | 'war_risk'           // 전쟁 가능성
+  | 'global_risk';       // 글로벌 리스크
+
+/** 강도 수준 (현재 전쟁용) */
+export type ConflictIntensity = 'high' | 'medium' | 'low';
+
+/** 개별 리스크 평가 항목 */
+export interface RiskAssessment {
+  id: string;
+  category: RiskCategory;
+  region_key: string;          // 'russia-ukraine', 'taiwan-strait' 등
+  label_ko: string;            // '러시아-우크라이나 전쟁'
+  label_en: string;            // 'Russia-Ukraine War'
+  flag_emoji: string;          // '🇺🇦🇷🇺'
+  // ── 3축 스코어링 ──
+  military_score: number;      // 군사적 긴장도 0-100
+  political_score: number;     // 정치적 긴장도 0-100
+  market_score: number;        // 시장 영향도 0-100
+  total_score: number;         // 가중 평균 (군사 40% + 정치 30% + 시장 30%)
+  // ── 설명 ──
+  summary_ko: string;          // 1~2줄 한국어 요약 (왜 이 점수인지)
+  // ── 카테고리별 추가 필드 ──
+  intensity?: ConflictIntensity;   // ongoing_conflict 전용
+  end_probability?: number;        // ongoing_conflict 전용: 종전 확률 0-100%
+  // ── 표시 ──
+  highlighted: boolean;        // 대만해협 등 강조 표시
+  sort_order: number;          // 표시 순서
+  updated_at: string;
+}
+
+/** 홈 응답에 포함되는 리스크 보드 데이터 */
+export interface RiskBoard {
+  ongoingConflicts: RiskAssessment[];  // 현재 전쟁
+  warRisks: RiskAssessment[];          // 전쟁 가능성
+  globalRisks: RiskAssessment[];       // 글로벌 리스크
+  globalRiskIndex: number;             // 종합 글로벌 리스크 지수 0-100
+  globalRiskDelta: number | null;      // 어제 대비 변화
+  top3: RiskAssessment[];              // 위험도 상위 3개
 }
 
 // ─── 뉴스 수집 파이프라인 ───

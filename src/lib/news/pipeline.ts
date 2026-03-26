@@ -10,6 +10,7 @@ import { summarizeTop } from '@/lib/news/summarizer';
 import { supabase } from '@/lib/supabase';
 import { cache } from '@/lib/cache';
 import crypto from 'node:crypto';
+import { loadRiskBoard } from '@/lib/risk/engine';
 import type { Article, Signal, Urgency, Region, TagResult } from '@/lib/types';
 
 // ID 생성 — Node 18+ crypto.randomUUID 사용
@@ -186,12 +187,19 @@ async function refreshHomeCache() {
     .order('published_at', { ascending: false })
     .limit(20);
 
+  const arts = (articles ?? []) as Article[];
+
+  // v2: 리스크 보드 로드
+  const riskBoard = await loadRiskBoard(arts);
+
   const homeData = {
     signals: signals ?? [],
-    articles: articles ?? [],
-    riskIndex: calculateRiskIndex(articles ?? []),
+    articles: arts,
+    riskIndex: riskBoard.globalRiskIndex,
+    riskDelta: riskBoard.globalRiskDelta,
+    riskBoard,
     marketData: [], // Finnhub/Polygon에서 별도 조회
-    alerts: (articles ?? []).slice(0, 5).map((a: Article) => ({
+    alerts: arts.slice(0, 5).map((a: Article) => ({
       level: a.impact_score && a.impact_score >= 70 ? 'red' as const
            : a.impact_score && a.impact_score >= 40 ? 'yellow' as const
            : 'green' as const,

@@ -39,6 +39,11 @@ async function loadHome() {
       renderAlerts(data.alerts);
     }
 
+    // v2: 리스크 보드 업데이트 (3섹션 시스템)
+    if (data.riskBoard && typeof renderRiskBoard === 'function') {
+      renderRiskBoard(data.riskBoard);
+    }
+
     console.log(`[GeoInvest] 홈 데이터 로드 완료 (${data.updatedAt})`);
   } catch (err) {
     console.warn('[GeoInvest] API 연결 실패 — 데모 데이터 유지:', err.message);

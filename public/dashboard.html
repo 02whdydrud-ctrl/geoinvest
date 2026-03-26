@@ -63,27 +63,55 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);backdr
 .g-status{font-size:13px;font-weight:700;}.g-trend{font-size:11px;color:var(--text2);}
 .g-delta{font-size:11px;font-weight:600;margin-top:3px;}
 
-/* ── 주요 분쟁 지역 (위험도 상위 4개) ── */
-.danger-section{margin-bottom:10px;}
+/* ── 리스크 보드 v2 (3섹션) ── */
 .section-label{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 .section-label.red{color:var(--red);}.section-label.red::after{background:rgba(224,62,62,.15);}
-.danger-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:900px){.danger-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:480px){.danger-grid{grid-template-columns:1fr;}}
-.danger-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px;position:relative;overflow:hidden;transition:all .2s;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04);}.danger-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.danger-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.danger-card.d-high::before{background:var(--red);}.danger-card.d-med::before{background:var(--yellow);}.danger-card.d-low::before{background:var(--green);}
-.dc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.dc-rank{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);}
-.dc-score{font-family:'Space Mono',monospace;font-size:19px;font-weight:700;display:flex;align-items:baseline;gap:2px;}.dc-score .pct{font-size:11px;color:var(--text3);}
-.dc-score.sc-high{color:var(--red);}.dc-score.sc-med{color:var(--yellow);}.dc-score.sc-low{color:var(--green);}
-.dc-name{font-size:14px;font-weight:700;margin-bottom:4px;}
-.dc-reason{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px;min-height:30px;}
-.dc-action{font-size:10px;font-family:'Space Mono',monospace;padding:4px 9px;border-radius:4px;display:inline-block;}
-.act-avoid{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
-.act-watch{background:rgba(212,136,15,.08);color:var(--yellow);border:1px solid rgba(212,136,15,.2);}
-.act-ok{background:rgba(10,138,62,.08);color:var(--green);border:1px solid rgba(10,138,62,.2);}
-.dc-trend{font-size:10px;color:var(--text3);margin-top:7px;font-family:'Space Mono',monospace;}
+.section-label.yellow{color:var(--yellow);}.section-label.yellow::after{background:rgba(212,136,15,.15);}
+.section-label.blue{color:var(--accent);}.section-label.blue::after{background:rgba(0,102,204,.15);}
+
+/* Top 3 위험 지역 */
+.top3-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:700px){.top3-strip{grid-template-columns:1fr;}}
+.top3-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:all .2s;}
+.top3-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.top3-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red);}
+.top3-rank{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:6px;}
+.top3-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+.top3-score{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--red);display:flex;align-items:baseline;gap:3px;margin-bottom:6px;}.top3-score .pct{font-size:11px;color:var(--text3);}
+.top3-summary{font-size:11px;color:var(--text2);line-height:1.6;}
+
+/* 3축 스코어 바 */
+.score-axes{display:flex;gap:6px;margin-top:8px;}
+.axis{flex:1;}.axis-lbl{font-size:8px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;}
+.axis-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}.axis-bar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+.ax-mil .axis-bar-fill{background:#c23c3c;}.ax-pol .axis-bar-fill{background:#d4880f;}.ax-mkt .axis-bar-fill{background:#0066cc;}
+
+/* 리스크 카테고리 섹션 */
+.risk-section{margin-bottom:18px;}
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+@media(max-width:480px){.risk-grid{grid-template-columns:1fr;}}
+
+/* 리스크 카드 (공통) */
+.risk-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.risk-card:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 3px 10px rgba(0,0,0,.06);}
+.risk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.risk-card.rc-high::before{background:var(--red);}.risk-card.rc-med::before{background:var(--yellow);}.risk-card.rc-low::before{background:var(--green);}
+.rk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.rk-flag{font-size:15px;}
+.rk-score{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;display:flex;align-items:baseline;gap:2px;}.rk-score .pct{font-size:10px;color:var(--text3);}
+.rk-score.s-high{color:var(--red);}.rk-score.s-med{color:var(--yellow);}.rk-score.s-low{color:var(--green);}
+.rk-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+.rk-summary{font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:8px;}
+.rk-badges{display:flex;flex-wrap:wrap;gap:4px;}
+.rk-badge{font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:3px;font-weight:700;}
+.rk-b-intensity{background:rgba(224,62,62,.08);color:var(--red);border:1px solid rgba(224,62,62,.2);}
+.rk-b-end{background:rgba(0,102,204,.08);color:var(--accent);border:1px solid rgba(0,102,204,.2);}
+
+/* 대만해협 하이라이트 카드 */
+.risk-card.highlight{border:2px solid var(--red);background:linear-gradient(135deg,rgba(224,62,62,.02),var(--surface));box-shadow:0 0 0 3px rgba(224,62,62,.08);}
+.risk-card.highlight::before{height:4px;background:linear-gradient(90deg,var(--red),#ff6b6b);}
+.highlight-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;color:#fff;background:var(--red);padding:2px 8px;border-radius:3px;margin-bottom:8px;animation:pulse-badge 2s infinite;}
+@keyframes pulse-badge{0%,100%{opacity:1;}50%{opacity:.7;}}
 
 /* ── 메인 그리드 ── */
 main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24px 28px;display:grid;grid-template-columns:1fr 320px;gap:14px;}
@@ -241,7 +269,8 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24p
   .logo-text{font-size:15px;}
   .hero-gauge{flex-direction:column;align-items:flex-start;gap:8px;}
   .signals-grid{grid-template-columns:1fr;}
-  .danger-grid{grid-template-columns:1fr;}
+  .top3-strip{grid-template-columns:1fr;}
+  .risk-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -302,55 +331,46 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:14px 24p
 <div class="hero">
   <div class="hero-top">
     <div class="hero-text">
-      <h1><em>지정학 리스크</em> 대시보드</h1>
-      <p>AI 기반 실시간 분쟁 분석 — 한국 투자자를 위한 리스크 시그널</p>
+      <h1><em>지정학 리스크</em> 평가 시스템</h1>
+      <p>3축 스코어링 (군사·정치·시장) 기반 실시간 분석 — 한국 투자자를 위한 리스크 인텔리전스</p>
     </div>
     <div class="hero-gauge">
       <div class="g-ring">
         <svg width="76" height="76" viewBox="0 0 100 100"><circle class="g-bg" cx="50" cy="50" r="42"/><circle class="g-fill" cx="50" cy="50" r="42" stroke="#e03e3e" stroke-dasharray="264" stroke-dashoffset="61" id="gCircle"/></svg>
-        <div class="g-center"><div class="g-num" id="gNum">77</div><div class="g-unit">%</div></div>
+        <div class="g-center"><div class="g-num" id="gNum">—</div><div class="g-unit">%</div></div>
       </div>
       <div class="g-info">
-        <div class="g-title">글로벌 리스크 지수</div>
-        <div class="g-status" id="gStatus">⚠ 위험 높음</div>
+        <div class="g-title">종합 리스크 지수</div>
+        <div class="g-status" id="gStatus">불러오는 중...</div>
         <div class="g-delta" id="gDelta" style="display:none;"></div>
       </div>
     </div>
   </div>
 
-  <!-- 주요 분쟁 지역 4개 -->
-  <div class="danger-section">
-    <div class="section-label red">🔺 주요 분쟁 지역 — 위험도 순위</div>
-    <div class="danger-grid" id="dangerGrid">
-      <div class="danger-card d-high" onclick="sel(document.querySelector('.rc.rh'),'러시아-우크라이나')">
-        <div class="dc-top"><span class="dc-rank">#1</span><div class="dc-score sc-high">88<span class="pct">%</span></div></div>
-        <div class="dc-name">🇺🇦 러-우 전쟁</div>
-        <div class="dc-reason">에너지 인프라 드론 공격 확대, 동절기 재건 차질 우려</div>
-        <div class="dc-action act-avoid">⚠ 에너지 섹터 주의</div>
-        <div class="dc-trend">추세: ▲ 상승</div>
-      </div>
-      <div class="danger-card d-high" onclick="sel(document.querySelector('.rc:nth-child(2)'),'중동 분쟁')">
-        <div class="dc-top"><span class="dc-rank">#2</span><div class="dc-score sc-high">82<span class="pct">%</span></div></div>
-        <div class="dc-name">🌍 중동 분쟁</div>
-        <div class="dc-reason">이스라엘-하마스 협상 결렬, 호르무즈 해협 긴장 고조</div>
-        <div class="dc-action act-avoid">⚠ 유가 상승 리스크</div>
-        <div class="dc-trend">추세: ▲ 상승</div>
-      </div>
-      <div class="danger-card d-high" onclick="sel(document.querySelector('.rc:nth-child(3)'),'미-중 무역전쟁')">
-        <div class="dc-top"><span class="dc-rank">#3</span><div class="dc-score sc-high">79<span class="pct">%</span></div></div>
-        <div class="dc-name">🇺🇸 미-중 갈등</div>
-        <div class="dc-reason">HBM 수출 규제 확대, 반도체 공급망 재편 가속</div>
-        <div class="dc-action act-watch">👀 반도체 변동성 확대</div>
-        <div class="dc-trend">추세: → 유지</div>
-      </div>
-      <div class="danger-card d-med" onclick="sel(document.querySelector('.rc:nth-child(4)'),'대만해협')">
-        <div class="dc-top"><span class="dc-rank">#4</span><div class="dc-score sc-med">62<span class="pct">%</span></div></div>
-        <div class="dc-name">🇹🇼 대만해협</div>
-        <div class="dc-reason">중국 해군 훈련 확대, 반도체 공급망 위협 지속</div>
-        <div class="dc-action act-watch">👀 공급망 모니터링</div>
-        <div class="dc-trend">추세: → 유지</div>
-      </div>
-    </div>
+  <!-- Top 3 고위험 지역 -->
+  <div class="section-label red">🔺 TOP 3 — 글로벌 최고 위험</div>
+  <div class="top3-strip" id="top3Strip">
+    <div class="top3-card"><div class="top3-rank">#1</div><div class="top3-name">불러오는 중...</div></div>
+    <div class="top3-card"><div class="top3-rank">#2</div><div class="top3-name">—</div></div>
+    <div class="top3-card"><div class="top3-rank">#3</div><div class="top3-name">—</div></div>
+  </div>
+
+  <!-- ═══ 섹션 1: 현재 전쟁 ═══ -->
+  <div class="risk-section">
+    <div class="section-label red">⚔️ 현재 전쟁 — ONGOING CONFLICTS</div>
+    <div class="risk-grid" id="ongoingGrid"></div>
+  </div>
+
+  <!-- ═══ 섹션 2: 전쟁 가능성 ═══ -->
+  <div class="risk-section">
+    <div class="section-label yellow">⚠️ 전쟁 가능성 — WAR RISK</div>
+    <div class="risk-grid" id="warRiskGrid"></div>
+  </div>
+
+  <!-- ═══ 섹션 3: 글로벌 리스크 ═══ -->
+  <div class="risk-section">
+    <div class="section-label blue">🌐 글로벌 리스크 — GLOBAL RISK FACTORS</div>
+    <div class="risk-grid" id="globalRiskGrid"></div>
   </div>
 </div>
 
@@ -562,6 +582,91 @@ function askAI(){
     txt.innerHTML=ans.replace(/\n/g,'<br>');
   },700);
 }
+
+// ── 리스크 보드 렌더링 ──
+function scoreClass(s){return s>=70?'s-high':s>=40?'s-med':'s-low';}
+function cardClass(s){return s>=70?'rc-high':s>=40?'rc-med':'rc-low';}
+function intensityKo(i){return i==='high'?'🔴 고강도':i==='medium'?'🟡 중강도':'🟢 저강도';}
+
+function renderTop3(items){
+  var el=document.getElementById('top3Strip');if(!el||!items.length)return;
+  el.innerHTML=items.map(function(r,i){
+    return '<div class="top3-card"><div class="top3-rank">#'+(i+1)+'</div>'
+      +'<div class="top3-name">'+r.flag_emoji+' '+r.label_ko+'</div>'
+      +'<div class="top3-score">'+r.total_score+'<span class="pct">%</span></div>'
+      +'<div class="top3-summary">'+r.summary_ko+'</div>'
+      +'<div class="score-axes">'
+      +'<div class="axis ax-mil"><div class="axis-lbl">군사 '+r.military_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.military_score+'%"></div></div></div>'
+      +'<div class="axis ax-pol"><div class="axis-lbl">정치 '+r.political_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.political_score+'%"></div></div></div>'
+      +'<div class="axis ax-mkt"><div class="axis-lbl">시장 '+r.market_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.market_score+'%"></div></div></div>'
+      +'</div></div>';
+  }).join('');
+}
+
+function renderRiskCard(r){
+  var hl=r.highlighted?' highlight':'';
+  var cls=cardClass(r.total_score);
+  var html='<div class="risk-card '+cls+hl+'">';
+  if(r.highlighted)html+='<div class="highlight-badge">⚠ 핵심 모니터링</div>';
+  html+='<div class="rk-top"><span class="rk-flag">'+r.flag_emoji+'</span>'
+    +'<div class="rk-score '+scoreClass(r.total_score)+'">'+r.total_score+'<span class="pct">%</span></div></div>'
+    +'<div class="rk-name">'+r.label_ko+'</div>'
+    +'<div class="rk-summary">'+r.summary_ko+'</div>'
+    +'<div class="rk-badges">';
+  if(r.intensity)html+='<span class="rk-badge rk-b-intensity">'+intensityKo(r.intensity)+'</span>';
+  if(r.end_probability!=null)html+='<span class="rk-badge rk-b-end">종전 확률 '+r.end_probability+'%</span>';
+  html+='</div>'
+    +'<div class="score-axes">'
+    +'<div class="axis ax-mil"><div class="axis-lbl">군사 '+r.military_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.military_score+'%"></div></div></div>'
+    +'<div class="axis ax-pol"><div class="axis-lbl">정치 '+r.political_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.political_score+'%"></div></div></div>'
+    +'<div class="axis ax-mkt"><div class="axis-lbl">시장 '+r.market_score+'</div><div class="axis-bar"><div class="axis-bar-fill" style="width:'+r.market_score+'%"></div></div></div>'
+    +'</div></div>';
+  return html;
+}
+
+function renderRiskBoard(board){
+  if(!board)return;
+  // Top 3
+  renderTop3(board.top3||[]);
+  // 현재 전쟁
+  var og=document.getElementById('ongoingGrid');
+  if(og)og.innerHTML=(board.ongoingConflicts||[]).map(renderRiskCard).join('');
+  // 전쟁 가능성
+  var wr=document.getElementById('warRiskGrid');
+  if(wr)wr.innerHTML=(board.warRisks||[]).map(renderRiskCard).join('');
+  // 글로벌 리스크
+  var gr=document.getElementById('globalRiskGrid');
+  if(gr)gr.innerHTML=(board.globalRisks||[]).map(renderRiskCard).join('');
+}
+
+// ── 데모 리스크 보드 (API 미연결 시 폴백) ──
+var DEMO_RISK_BOARD={
+  top3:[
+    {flag_emoji:'🇺🇦🇷🇺',label_ko:'러시아-우크라이나 전쟁',total_score:86,military_score:92,political_score:85,market_score:78,summary_ko:'전면전 지속 중. 에너지·곡물 시장 직접 영향.'},
+    {flag_emoji:'🇮🇱🇵🇸',label_ko:'이스라엘-팔레스타인 분쟁',total_score:82,military_score:88,political_score:82,market_score:72,summary_ko:'가자 교전 지속. 중동 원유 리스크 상존.'},
+    {flag_emoji:'🇹🇼🇨🇳',label_ko:'대만해협',total_score:81,military_score:72,political_score:80,market_score:95,summary_ko:'반도체 공급망 글로벌 최대 리스크. TSMC 의존도 핵심.'}
+  ],
+  ongoingConflicts:[
+    {flag_emoji:'🇺🇦🇷🇺',label_ko:'러시아-우크라이나 전쟁',total_score:86,military_score:92,political_score:85,market_score:78,summary_ko:'전면전 지속 중. 양측 소모전 양상. 에너지·곡물 시장 직접 영향.',intensity:'high',end_probability:8,highlighted:false},
+    {flag_emoji:'🇮🇱🇵🇸',label_ko:'이스라엘-팔레스타인 분쟁',total_score:82,military_score:88,political_score:82,market_score:72,summary_ko:'가자 교전 지속. 레바논·이란 확전 우려. 중동 원유 리스크 상존.',intensity:'high',end_probability:12,highlighted:false},
+    {flag_emoji:'🇸🇩',label_ko:'수단 내전',total_score:59,military_score:75,political_score:60,market_score:35,summary_ko:'RSF vs SAF 내전 장기화. 인도주의 위기. 직접적 시장 영향은 제한적.',intensity:'medium',end_probability:15,highlighted:false},
+    {flag_emoji:'🇲🇲',label_ko:'미얀마 내전',total_score:53,military_score:68,political_score:55,market_score:30,summary_ko:'저항군 vs 군부. 희토류·주석 공급 일부 영향.',intensity:'medium',end_probability:10,highlighted:false}
+  ],
+  warRisks:[
+    {flag_emoji:'🇹🇼🇨🇳',label_ko:'대만해협',total_score:81,military_score:72,political_score:80,market_score:95,summary_ko:'중국 군사훈련 증가. 반도체 공급망 글로벌 최대 리스크. TSMC 의존도 핵심.',highlighted:true},
+    {flag_emoji:'🇮🇷🇮🇱',label_ko:'이란-이스라엘',total_score:75,military_score:70,political_score:75,market_score:82,summary_ko:'핵 프로그램 갈등. 직접 군사 충돌 시 원유 가격 급등 시나리오.',highlighted:false},
+    {flag_emoji:'🇰🇷🇰🇵',label_ko:'한반도',total_score:67,military_score:65,political_score:70,market_score:68,summary_ko:'북한 핵·미사일 위협 지속. 남북 긴장 고조. 한국 방산주 직접 영향.',highlighted:false},
+    {flag_emoji:'🌊',label_ko:'남중국해',total_score:58,military_score:58,political_score:62,market_score:55,summary_ko:'중국-필리핀 해상 충돌 반복. 세계 해상 무역 30% 통과 해역.',highlighted:false}
+  ],
+  globalRisks:[
+    {flag_emoji:'⛽',label_ko:'호르무즈 해협',total_score:70,military_score:55,political_score:65,market_score:92,summary_ko:'세계 원유 20% 통과. 이란 봉쇄 시 에너지 가격 급등.',highlighted:false},
+    {flag_emoji:'🇺🇸🇨🇳',label_ko:'미-중 무역전쟁',total_score:67,military_score:30,political_score:85,market_score:90,summary_ko:'관세·기술 수출통제 강화. 반도체·AI·배터리 공급망 재편 중.',highlighted:false},
+    {flag_emoji:'🚢',label_ko:'글로벌 공급망 교란',total_score:53,military_score:25,political_score:50,market_score:85,summary_ko:'홍해 후티 공격, 파나마 운하 가뭄. 해운비 급등.',highlighted:false},
+    {flag_emoji:'⚡',label_ko:'유럽 에너지 위기',total_score:51,military_score:20,political_score:60,market_score:75,summary_ko:'LNG 의존도 증가. 러시아 가스 차단 장기화.',highlighted:false},
+    {flag_emoji:'🧊',label_ko:'북극·그린란드',total_score:45,military_score:35,political_score:55,market_score:48,summary_ko:'희토류·자원 경쟁. 미국-덴마크 그린란드 긴장.',highlighted:false}
+  ]
+};
+renderRiskBoard(DEMO_RISK_BOARD);
 
 // ── 속보 자동 업데이트 ──
 var ALERTS=[{i:'🔴',t:'<strong>러시아</strong> 발틱해 군사 활동 증가'},{i:'🟡',t:'<strong>중국</strong> 희토류 추가 수출 제한 검토'},{i:'🟢',t:'<strong>NATO</strong> 방산 지출 GDP 3% 합의'}];
