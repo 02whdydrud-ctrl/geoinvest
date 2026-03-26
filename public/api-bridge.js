@@ -66,7 +66,7 @@ function renderSignals(signals) {
     return `
       <div class="signal-card ${u.cls}">
         <div class="signal-top">
-          <span class="signal-num">SIGNAL 0${i + 1}</span>
+          <span class="signal-num">시그널 0${i + 1}</span>
           <span class="signal-badge ${u.badge}">${u.icon}</span>
         </div>
         <div class="signal-headline">${s.title}</div>
@@ -167,15 +167,15 @@ function updateGauge(score) {
   if (circle) {
     const offset = 264 * (1 - score / 100);
     circle.style.strokeDashoffset = String(offset);
-    if (score >= 70) { circle.style.stroke = '#ff4757'; if(numEl) numEl.style.color = '#ff4757'; }
-    else if (score >= 30) { circle.style.stroke = '#ffa502'; if(numEl) numEl.style.color = '#ffa502'; }
-    else { circle.style.stroke = '#2ed573'; if(numEl) numEl.style.color = '#2ed573'; }
+    if (score >= 70) { circle.style.stroke = '#e03e3e'; if(numEl) numEl.style.color = '#e03e3e'; }
+    else if (score >= 30) { circle.style.stroke = '#d4880f'; if(numEl) numEl.style.color = '#d4880f'; }
+    else { circle.style.stroke = '#0a8a3e'; if(numEl) numEl.style.color = '#0a8a3e'; }
   }
 
   if (statusEl) {
-    if (score >= 70) { statusEl.textContent = '⚠ High Risk'; statusEl.style.color = '#ff4757'; }
-    else if (score >= 30) { statusEl.textContent = '◆ Moderate Risk'; statusEl.style.color = '#ffa502'; }
-    else { statusEl.textContent = '✓ Low Risk'; statusEl.style.color = '#2ed573'; }
+    if (score >= 70) { statusEl.textContent = '⚠ 위험 높음'; statusEl.style.color = '#e03e3e'; }
+    else if (score >= 30) { statusEl.textContent = '◆ 보통'; statusEl.style.color = '#d4880f'; }
+    else { statusEl.textContent = '✓ 안전'; statusEl.style.color = '#0a8a3e'; }
   }
 }
 

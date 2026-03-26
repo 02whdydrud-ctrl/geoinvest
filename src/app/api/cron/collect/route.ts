@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════
-//  GET /api/cron/collect?secret=...
-//  스케줄러(Vercel Cron / 외부)가 5~15분마다 호출
-//  전체 뉴스 수집 파이프라인 실행
+//  GET /api/cron/collect
+//  Vercel Cron이 자동으로 Authorization: Bearer <CRON_SECRET> 헤더를 추가
+//  외부 직접 호출 시에도 동일 헤더 필요
 // ═══════════════════════════════════════════
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,9 +11,10 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Vercel: 최대 60초 (Pro 플랜)
 
 export async function GET(req: NextRequest) {
-  // 보안: CRON_SECRET 검증
-  const secret = req.nextUrl.searchParams.get('secret');
-  if (secret !== process.env.CRON_SECRET) {
+  // 보안: Authorization 헤더로 CRON_SECRET 검증 (URL 파라미터 방식 제거)
+  const authHeader = req.headers.get('authorization');
+  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  if (!authHeader || authHeader !== expectedToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
