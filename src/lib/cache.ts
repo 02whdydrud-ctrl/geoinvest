@@ -60,9 +60,8 @@ export const cache = {
     try {
       const { count } = await supabase
         .from('cache')
-        .delete()
-        .lt('expires_at', new Date().toISOString())
-        .select('*', { count: 'exact', head: true });
+        .delete({ count: 'exact' })
+        .lt('expires_at', new Date().toISOString());
       return count ?? 0;
     } catch {
       return 0;
