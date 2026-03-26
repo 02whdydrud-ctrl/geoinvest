@@ -3,582 +3,527 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoInvest — 지정학 리스크</title>
+<title>GeoRisk — 지정학 리스크 피드</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ═══ Design Tokens ═══ */
-:root{
-  --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f5;
-  --border:#e1e4e8;--border2:#d0d7de;
-  --accent:#1a6dcc;--accent2:#e8f0fe;
-  --red:#d93025;--red-bg:#fce8e6;--red-border:#f5c6c2;
-  --orange:#e8710a;--orange-bg:#fef3e5;--orange-border:#f9d9a8;
-  --yellow:#d4880f;--yellow-bg:#fef7e0;
-  --green:#188038;--green-bg:#e6f4ea;--green-border:#b7e1c5;
-  --text:#1f2328;--text2:#5f6368;--text3:#9aa0a6;
-  --sidebar-w:220px;
-  --header-h:52px;
+:root {
+  --bg:#f3f4f8; --surface:#fff; --surface2:#f0f1f6; --surface3:#e6e8f0;
+  --border:#dde0ea; --border2:#c8ccd8;
+  --accent:#1a5fc8; --accent2:#e6eeff; --accent-dark:#1248a0;
+  --red:#c62828; --red-bg:#fde8e8; --red-border:#f5b0b0;
+  --orange:#e05000; --orange-bg:#fff0e5; --orange-border:#ffc080;
+  --yellow:#b87700; --yellow-bg:#fffbe6; --yellow-border:#fde080;
+  --green:#1b7a34; --green-bg:#e6f5ec; --green-border:#90d4a8;
+  --text:#191c24; --text2:#454e61; --text3:#8a94a6;
+  --sidebar-w:224px; --header-h:54px;
+  --shadow-xs:0 1px 3px rgba(0,0,0,.07);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 20px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 36px rgba(0,0,0,.13),0 2px 8px rgba(0,0,0,.06);
 }
-*{margin:0;padding:0;box-sizing:border-box;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden;}
 a{text-decoration:none;color:inherit;}
+button{font-family:inherit;cursor:pointer;}
 
-/* ═══ Sidebar (Weather Channel style — persistent on desktop) ═══ */
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;transition:transform .25s ease;}
-.sb-logo{padding:14px 18px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);height:var(--header-h);}
-.sb-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;font-family:'Space Mono',monospace;}
-.sb-logo-txt{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text);}
-.sb-logo-txt span{color:var(--accent);}
-.sb-nav{flex:1;padding:8px 0;overflow-y:auto;}
-.sb-section{font-size:10px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;padding:16px 18px 6px;display:block;}
-.sb-item{display:flex;align-items:center;gap:11px;padding:10px 18px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .12s;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif;border-left:3px solid transparent;}
+/* ═══ Sidebar ═══ */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.sb-logo{padding:0 18px;height:var(--header-h);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .12s;}
+.sb-logo:hover{background:var(--surface2);}
+.sb-globe{width:30px;height:30px;background:linear-gradient(135deg,#1a5fc8,#0d3a8a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(26,95,200,.3);flex-shrink:0;}
+.sb-brand{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;letter-spacing:-.3px;}
+.sb-brand em{color:var(--red);font-style:normal;}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto;}
+.sb-section{font-size:9.5px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.8px;padding:16px 18px 5px;display:block;font-weight:700;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:var(--text2);background:none;border:none;width:100%;text-align:left;transition:all .12s;border-left:3px solid transparent;font-family:'Noto Sans KR',sans-serif;}
 .sb-item:hover{background:var(--surface2);color:var(--text);}
-.sb-item.active{background:var(--accent2);color:var(--accent);font-weight:600;border-left-color:var(--accent);}
-.sb-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.sb-item.active{background:var(--accent2);color:var(--accent);font-weight:700;border-left-color:var(--accent);}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
 .sb-badge{margin-left:auto;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);}
-.sb-divider{height:1px;background:var(--border);margin:8px 0;}
-.sb-footer{padding:14px 18px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
+.sb-divider{height:1px;background:var(--border);margin:6px 12px;}
+.sb-footer{padding:12px 18px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;line-height:1.6;}
+.sb-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:4px;animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ═══ Header (mobile only) ═══ */
-.mobile-header{display:none;position:sticky;top:0;z-index:99;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:var(--header-h);padding:0 16px;align-items:center;justify-content:space-between;}
-.mob-hamburger{background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);display:flex;align-items:center;}
-.mob-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;color:var(--text);}
-.mob-logo span{color:var(--accent);}
+/* ═══ Mobile Header ═══ */
+.mobile-header{display:none;position:sticky;top:0;z-index:99;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:var(--header-h);padding:0 16px;align-items:center;justify-content:space-between;box-shadow:var(--shadow-xs);}
+.mob-hamburger{background:none;border:none;padding:6px;color:var(--text2);display:flex;align-items:center;}
+.mob-brand{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;cursor:pointer;}
+.mob-brand em{color:var(--red);font-style:normal;}
 .mob-live{font-size:9px;font-family:'Space Mono',monospace;color:var(--red);font-weight:700;letter-spacing:1px;}
 
-/* ═══ Main Content ═══ */
+/* ═══ Main Layout ═══ */
 .main{margin-left:var(--sidebar-w);min-height:100vh;}
 
 /* ── Alert Banner ── */
-.alert-banner{background:var(--red-bg);border-bottom:1px solid var(--red-border);padding:10px 28px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--red);font-weight:500;}
-.alert-banner.warn{background:var(--orange-bg);border-bottom-color:var(--orange-border);color:var(--orange);}
+.alert-banner{background:linear-gradient(90deg,#fde8e8 0%,#fdf0e8 100%);border-bottom:1px solid var(--red-border);padding:10px 28px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--red);font-weight:500;}
+.alert-banner.warn{background:linear-gradient(90deg,var(--orange-bg) 0%,#fff8ee 100%);border-bottom-color:var(--orange-border);color:var(--orange);}
 .alert-icon{font-size:16px;flex-shrink:0;}
-.alert-text{flex:1;line-height:1.5;}.alert-text strong{font-weight:700;}
-.alert-dismiss{background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:16px;padding:4px;}.alert-dismiss:hover{opacity:1;}
+.alert-text{flex:1;line-height:1.5;}
+.alert-text strong{font-weight:700;}
+.alert-dismiss{background:none;border:none;color:inherit;opacity:.45;font-size:16px;padding:4px;transition:opacity .12s;}
+.alert-dismiss:hover{opacity:1;}
 
-/* ── Content Container ── */
-.content{max-width:1200px;margin:0 auto;padding:24px 28px 40px;}
+/* ── Content ── */
+.content{max-width:1240px;margin:0 auto;padding:24px 28px 48px;}
 
-/* ── Summary Metrics ── */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
-.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;}
-.mc-left{display:flex;flex-direction:column;gap:4px;}
-.mc-label{font-size:11px;color:var(--text3);font-weight:500;}
-.mc-value{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;line-height:1;}
-.mc-delta{font-size:11px;font-family:'Space Mono',monospace;font-weight:600;margin-top:2px;}
-.mc-delta.up{color:var(--red);}.mc-delta.down{color:var(--green);}.mc-delta.flat{color:var(--text3);}
-.mc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.mc-icon.ic-risk{background:var(--accent2);color:var(--accent);}
-.mc-icon.ic-high{background:var(--red-bg);color:var(--red);}
-.mc-icon.ic-conflict{background:var(--orange-bg);color:var(--orange);}
-.mc-icon.ic-stable{background:var(--green-bg);color:var(--green);}
+/* ── Stats Strip ── */
+.stats-strip{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;box-shadow:var(--shadow-xs);}
+.stat-item{flex:1;padding:14px 20px;text-align:center;border-right:1px solid var(--border);}
+.stat-item:last-child{border-right:none;}
+.stat-val{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;line-height:1;margin-bottom:4px;}
+.stat-val.danger{color:var(--red);}
+.stat-val.warn{color:var(--orange);}
+.stat-val.ok{color:var(--green);}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;}
+.stat-delta{font-size:10px;font-family:'Space Mono',monospace;font-weight:700;margin-top:2px;}
+.stat-delta.up{color:var(--red);}
+.stat-delta.down{color:var(--green);}
+.stat-delta.flat{color:var(--text3);}
 
-/* ── Featured Card (THE CORE) ── */
-.featured{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;margin-bottom:28px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.ft-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
-.ft-region{display:flex;align-items:center;gap:10px;}
-.ft-flag{font-size:24px;}
-.ft-name{font-size:20px;font-weight:700;}
-.ft-score-block{text-align:right;}
-.ft-score{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;line-height:1;}
-.ft-score.lv-vh{color:var(--red);}.ft-score.lv-h{color:var(--orange);}.ft-score.lv-m{color:var(--yellow);}.ft-score.lv-l{color:var(--green);}
-.ft-level{font-size:11px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 10px;border-radius:4px;display:inline-block;margin-top:4px;}
-.ft-level.lv-vh{background:var(--red-bg);color:var(--red);}.ft-level.lv-h{background:var(--orange-bg);color:var(--orange);}
-.ft-level.lv-m{background:var(--yellow-bg);color:var(--yellow);}.ft-level.lv-l{background:var(--green-bg);color:var(--green);}
+/* ── Section Title ── */
+.sec-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
 
-.ft-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
-.ft-risk-panel{padding:20px 24px;border-right:1px solid var(--border);}
-.ft-econ-panel{padding:20px 24px;}
-.ft-panel-title{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.5px;margin-bottom:14px;font-weight:700;}
+/* ═══ Featured Event Card ═══ */
+.featured-event{background:var(--surface);border-radius:16px;overflow:hidden;margin-bottom:28px;box-shadow:var(--shadow-md);border:1px solid var(--border);}
+.fe-hero{position:relative;height:240px;overflow:hidden;background:linear-gradient(135deg,#0f1629 0%,#1e0a0a 40%,#0f1e1a 100%);}
+.fe-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;transition:opacity .4s;}
+.fe-hero-img.loaded{opacity:.42;}
+.fe-hero-grad{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(15,22,41,.15) 0%,rgba(15,22,41,.88) 100%);}
+.fe-hero-content{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:24px 28px;}
+.fe-badges{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.fe-risk-badge{font-size:10px;font-family:'Space Mono',monospace;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.5px;}
+.fe-risk-badge.lv-vh{background:rgba(198,40,40,.9);color:#fff;}
+.fe-risk-badge.lv-h{background:rgba(224,80,0,.9);color:#fff;}
+.fe-risk-badge.lv-m{background:rgba(184,119,0,.9);color:#fff;}
+.fe-risk-badge.lv-l{background:rgba(27,122,52,.9);color:#fff;}
+.fe-region-badge{font-size:10px;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:4px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);backdrop-filter:blur(4px);}
+.fe-trend-badge{font-size:10px;font-family:'Space Mono',monospace;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(255,255,255,.1);backdrop-filter:blur(4px);}
+.fe-trend-badge.t-up{color:#ff8a80;}
+.fe-trend-badge.t-down{color:#80cfa0;}
+.fe-trend-badge.t-flat{color:rgba(255,255,255,.6);}
+.fe-title{font-size:26px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:6px;text-shadow:0 2px 12px rgba(0,0,0,.4);letter-spacing:-.5px;}
+.fe-sub{font-size:13px;color:rgba(255,255,255,.65);font-weight:400;line-height:1.5;}
+.fe-body{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);}
+.fe-panel{padding:20px 24px;}
+.fe-panel:first-child{border-right:1px solid var(--border);}
+.fe-panel-lbl{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);letter-spacing:1.8px;font-weight:700;margin-bottom:14px;}
+.fe-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2);}
+.fe-row:last-child{border-bottom:none;}
+.fe-row-key{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;}
+.fe-row-ico{font-size:14px;width:18px;text-align:center;}
+.fe-row-val{font-size:12px;font-weight:600;}
+.fe-row-val.v-high{color:var(--red);}
+.fe-row-val.v-med{color:var(--orange);}
+.fe-row-val.v-low{color:var(--green);}
+.fe-row-val.v-neutral{color:var(--text3);}
+.fe-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.fe-chip{font-size:10px;font-family:'Space Mono',monospace;font-weight:600;padding:3px 9px;border-radius:4px;}
+.fe-chip.win{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.fe-chip.lose{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.fe-insight{padding:16px 24px;background:var(--surface2);border-top:1px solid var(--border);font-size:13px;line-height:1.7;color:var(--text);display:flex;align-items:flex-start;gap:8px;}
+.fe-insight-ico{color:var(--accent);font-size:14px;flex-shrink:0;margin-top:2px;}
 
-.ft-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--surface2);}
-.ft-row:last-child{border-bottom:none;}
-.ft-row-label{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;}
-.ft-row-label .ico{font-size:14px;width:20px;text-align:center;}
-.ft-row-value{font-size:12px;font-weight:600;}
-.ft-row-value.val-high{color:var(--red);}.ft-row-value.val-med{color:var(--orange);}.ft-row-value.val-low{color:var(--green);}.ft-row-value.val-up{color:var(--red);}.ft-row-value.val-down{color:var(--green);}.ft-row-value.val-neutral{color:var(--text3);}
+/* ═══ Hot Issues Grid ═══ */
+.hot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+.hot-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .18s;box-shadow:var(--shadow-xs);display:flex;flex-direction:column;}
+.hot-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--accent);}
+.hot-img{height:140px;background-size:cover;background-position:center;position:relative;background-color:var(--surface3);flex-shrink:0;}
+.hot-img-tag{position:absolute;top:10px;left:10px;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:.5px;}
+.hot-img-tag.lv-vh{background:var(--red);color:#fff;}
+.hot-img-tag.lv-h{background:var(--orange);color:#fff;}
+.hot-img-tag.lv-m{background:var(--yellow);color:#fff;}
+.hot-img-tag.lv-l{background:var(--green);color:#fff;}
+.hot-img-trend{position:absolute;top:10px;right:10px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);}
+.hot-img-trend.t-up{color:#ff8a80;}
+.hot-img-trend.t-flat{color:rgba(255,255,255,.7);}
+.hot-img-trend.t-down{color:#80cfa0;}
+.hot-content{padding:14px;flex:1;display:flex;flex-direction:column;}
+.hot-meta{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.hot-region{font-size:9.5px;font-family:'Space Mono',monospace;color:var(--text3);font-weight:700;letter-spacing:.3px;}
+.hot-dot{width:3px;height:3px;border-radius:50%;background:var(--border2);flex-shrink:0;}
+.hot-time{font-size:9.5px;font-family:'Space Mono',monospace;color:var(--text3);}
+.hot-title{font-size:13px;font-weight:700;line-height:1.45;margin-bottom:6px;flex:1;}
+.hot-summary{font-size:11.5px;color:var(--text2);line-height:1.6;}
 
-.ft-sectors{display:flex;gap:5px;flex-wrap:wrap;}
-.ft-chip{font-size:10px;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:4px;font-weight:600;}
-.ft-chip.chip-win{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
-.ft-chip.chip-lose{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+/* ═══ Compact Region Grid ═══ */
+.compact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;}
+.compact-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-xs);position:relative;overflow:hidden;}
+.compact-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);border-color:var(--accent);}
+.compact-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:2px 0 0 2px;}
+.compact-card.rc-vh::before{background:var(--red);}
+.compact-card.rc-h::before{background:var(--orange);}
+.compact-card.rc-m::before{background:var(--yellow);}
+.compact-card.rc-l::before{background:var(--green);}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.cc-name{font-size:13px;font-weight:700;}
+.cc-score-wrap{text-align:right;}
+.cc-score{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;line-height:1;}
+.cc-score.lv-vh{color:var(--red);}
+.cc-score.lv-h{color:var(--orange);}
+.cc-score.lv-m{color:var(--yellow);}
+.cc-score.lv-l{color:var(--green);}
+.cc-level{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;}
+.cc-event{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px;min-height:16px;}
+.cc-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+.cc-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+.cc-fill.lv-vh{background:var(--red);}
+.cc-fill.lv-h{background:var(--orange);}
+.cc-fill.lv-m{background:var(--yellow);}
+.cc-fill.lv-l{background:var(--green);}
 
-.ft-footer{padding:16px 24px;border-top:1px solid var(--border);background:var(--surface2);}
-.ft-oneliner{font-size:13px;line-height:1.7;color:var(--text);}
-.ft-oneliner-icon{font-size:14px;margin-right:6px;color:var(--accent);}
-.ft-events{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
-.ft-event-tag{font-size:10px;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text2);}
-
-/* ── Region Grid ── */
-.region-section-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.region-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.region-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px;}
-.region-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
-.region-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--accent);}
-.region-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;}
-.region-card.rc-vh::before{background:var(--red);}.region-card.rc-h::before{background:var(--orange);}
-.region-card.rc-m::before{background:var(--yellow);}.region-card.rc-l::before{background:var(--green);}
-
-.rg-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.rg-info{display:flex;flex-direction:column;gap:3px;}
-.rg-name{font-size:14px;font-weight:700;}
-.rg-level{font-size:10px;font-family:'Space Mono',monospace;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
-.rg-level.lv-vh{color:var(--red);}.rg-level.lv-h{color:var(--orange);}.rg-level.lv-m{color:var(--yellow);}.rg-level.lv-l{color:var(--green);}
-.rg-trend{font-size:11px;font-family:'Space Mono',monospace;}.rg-trend.t-up{color:var(--red);}.rg-trend.t-down{color:var(--green);}.rg-trend.t-flat{color:var(--text3);}
-.rg-score{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;line-height:1;}
-.rg-score.lv-vh{color:var(--red);}.rg-score.lv-h{color:var(--orange);}.rg-score.lv-m{color:var(--yellow);}.rg-score.lv-l{color:var(--green);}
-.rg-score-sub{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-align:right;}
-
-.rg-issues{margin-top:8px;padding-top:8px;border-top:1px solid var(--surface2);}
-.rg-issue{font-size:11px;color:var(--text2);line-height:1.7;padding-left:12px;position:relative;}
-.rg-issue::before{content:'•';position:absolute;left:0;color:var(--text3);}
-
-/* ── Trend Section ── */
-.trend-section{margin-bottom:32px;}
-.trend-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.trend-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.trend-list{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-.trend-row{display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid var(--surface2);gap:12px;}
-.trend-row:last-child{border-bottom:none;}
-.trend-rank{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);width:20px;}
-.trend-name{font-size:13px;font-weight:600;flex:1;}
-.trend-bar{width:120px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
-.trend-bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
-.trend-bar-fill.lv-vh{background:var(--red);}.trend-bar-fill.lv-h{background:var(--orange);}
-.trend-bar-fill.lv-m{background:var(--yellow);}.trend-bar-fill.lv-l{background:var(--green);}
-.trend-score{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;width:36px;text-align:right;}
-.trend-delta{font-family:'Space Mono',monospace;font-size:11px;font-weight:600;width:40px;text-align:right;}
-
-/* ── Community Panel ── */
-.community-section{margin-bottom:32px;}
-.community-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.community-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.community-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-.discussion-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .12s;}
-.discussion-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.disc-text{font-size:13px;font-weight:500;line-height:1.6;margin-bottom:10px;color:var(--text);}
-.disc-meta{display:flex;align-items:center;gap:12px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
-.disc-vote{display:flex;align-items:center;gap:3px;font-weight:700;color:var(--accent);}
-.disc-tag{padding:2px 7px;border-radius:3px;background:var(--surface2);font-size:9px;}
+/* ═══ Community Preview ═══ */
+.comm-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-xs);margin-bottom:32px;}
+.comm-item{display:flex;align-items:flex-start;gap:12px;padding:16px 20px;border-bottom:1px solid var(--surface2);cursor:pointer;transition:background .12s;}
+.comm-item:last-child{border-bottom:none;}
+.comm-item:hover{background:var(--surface2);}
+.comm-avatar{width:34px;height:34px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,var(--accent2),var(--surface3));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;}
+.comm-body{flex:1;min-width:0;}
+.comm-text{font-size:13px;line-height:1.6;margin-bottom:6px;}
+.comm-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
+.comm-vote{color:var(--accent);font-weight:700;}
+.comm-tag{padding:1px 6px;border-radius:3px;background:var(--surface3);font-size:9px;color:var(--text3);}
+.comm-write{padding:14px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:10px;}
+.comm-input-fake{flex:1;padding:8px 14px;border-radius:8px;font-size:13px;background:var(--surface);border:1px solid var(--border);color:var(--text3);cursor:text;}
 
 /* ═══ Responsive ═══ */
+@media(max-width:1100px){.hot-grid{grid-template-columns:repeat(2,1fr);}.compact-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:1024px){
   .sidebar{transform:translateX(-100%);z-index:200;}
   .sidebar.open{transform:translateX(0);}
-  .sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.2);}
+  .sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.25);}
   .sb-overlay.on{display:block;}
   .mobile-header{display:flex;}
   .main{margin-left:0;}
-  .content{padding:20px 16px 32px;}
-  .metrics{grid-template-columns:repeat(2,1fr);}
-  .ft-body{grid-template-columns:1fr;}
-  .ft-risk-panel{border-right:none;border-bottom:1px solid var(--border);}
-  .region-grid{grid-template-columns:repeat(2,1fr);}
-  .community-grid{grid-template-columns:1fr;}
+  .content{padding:20px 16px 40px;}
+  .fe-body{grid-template-columns:1fr;}
+  .fe-panel:first-child{border-right:none;border-bottom:1px solid var(--border);}
 }
-@media(max-width:600px){
-  .metrics{grid-template-columns:1fr 1fr;gap:8px;}
-  .mc-value{font-size:22px;}
-  .region-grid{grid-template-columns:1fr;}
-  .ft-header{flex-direction:column;gap:10px;}
-  .ft-score-block{text-align:left;}
-  .ft-score{font-size:28px;}
-  .trend-bar{width:80px;}
-  .alert-banner{padding:10px 16px;font-size:12px;}
+@media(max-width:680px){
+  .hot-grid{grid-template-columns:1fr;}
+  .compact-grid{grid-template-columns:repeat(2,1fr);}
+  .fe-title{font-size:20px;}
+  .fe-hero{height:200px;}
+  .stats-strip{flex-wrap:wrap;}
+  .stat-item{min-width:50%;border-bottom:1px solid var(--border);}
+  .stat-item:nth-child(even){border-right:none;}
 }
+@media(max-width:400px){.compact-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<!-- ═══ Sidebar ═══ -->
 <div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+
 <aside class="sidebar" id="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-icon">G</div>
-    <div class="sb-logo-txt"><span>Geo</span>Invest</div>
+  <div class="sb-logo" onclick="location.reload()" title="홈으로">
+    <div class="sb-globe">🌐</div>
+    <div class="sb-brand">Geo<em>Risk</em></div>
   </div>
   <nav class="sb-nav">
     <span class="sb-section">OVERVIEW</span>
     <button class="sb-item active" onclick="navTo('home',this)"><span class="sb-icon">🏠</span>홈</button>
-    <button class="sb-item" onclick="navTo('regions',this)"><span class="sb-icon">🌍</span>지역별 현황</button>
+    <button class="sb-item" onclick="navTo('issues',this)"><span class="sb-icon">🔥</span>이슈 피드</button>
     <button class="sb-item" onclick="navTo('alerts',this)"><span class="sb-icon">⚠️</span>경보<span class="sb-badge" id="alertCount">3</span></button>
-    <button class="sb-item" onclick="navTo('trends',this)"><span class="sb-icon">📈</span>추세</button>
+    <button class="sb-item" onclick="navTo('regions',this)"><span class="sb-icon">🌍</span>지역별 현황</button>
     <div class="sb-divider"></div>
     <span class="sb-section">COMMUNITY</span>
     <button class="sb-item" onclick="navTo('community',this)"><span class="sb-icon">💬</span>토론</button>
     <div class="sb-divider"></div>
-    <span class="sb-section">REGIONS</span>
-    <button class="sb-item" onclick="scrollToRegion('east-asia')"><span class="sb-icon">🌏</span>동아시아</button>
-    <button class="sb-item" onclick="scrollToRegion('middle-east')"><span class="sb-icon">🌍</span>중동</button>
-    <button class="sb-item" onclick="scrollToRegion('east-europe')"><span class="sb-icon">🇺🇦</span>동유럽</button>
-    <button class="sb-item" onclick="scrollToRegion('south-asia')"><span class="sb-icon">🌏</span>남아시아</button>
+    <span class="sb-section">HOT ISSUES</span>
+    <button class="sb-item" onclick="navTo('issues',this)"><span class="sb-icon">🔴</span>이란-이스라엘</button>
+    <button class="sb-item" onclick="navTo('issues',this)"><span class="sb-icon">🟠</span>대만 해협</button>
+    <button class="sb-item" onclick="navTo('issues',this)"><span class="sb-icon">🔴</span>우크라이나</button>
   </nav>
-  <div class="sb-footer">업데이트: <span id="sbTime">—</span></div>
+  <div class="sb-footer">
+    <div><span class="sb-live-dot"></span>LIVE 업데이트 중</div>
+    <div style="margin-top:3px;">마지막: <span id="sbTime">—</span></div>
+  </div>
 </aside>
 
-<!-- ═══ Mobile Header ═══ -->
 <div class="mobile-header">
-  <button class="mob-hamburger" onclick="toggleSidebar()" aria-label="메뉴">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  <button class="mob-hamburger" onclick="toggleSidebar()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
   </button>
-  <div class="mob-logo"><span>Geo</span>Invest</div>
+  <div class="mob-brand" onclick="location.reload()">🌐 Geo<em>Risk</em></div>
   <div class="mob-live">● LIVE</div>
 </div>
 
-<!-- ═══ Main Content ═══ -->
 <div class="main">
-
-  <!-- Alert Banner -->
   <div class="alert-banner" id="alertBanner">
     <span class="alert-icon">⚠️</span>
-    <div class="alert-text"><strong>고위험 경보</strong> — 중동·동유럽 리스크가 매우 높은 수준입니다. 에너지·방산 섹터 변동성 확대에 유의하세요.</div>
+    <div class="alert-text"><strong>고위험 경보</strong> — 중동·동유럽 긴장이 최고조입니다. 에너지·방산 섹터 변동성에 주의하세요.</div>
     <button class="alert-dismiss" onclick="this.parentElement.style.display='none'">✕</button>
   </div>
 
   <div class="content">
 
-    <!-- Summary Metrics -->
-    <div class="metrics" id="metricsGrid">
-      <div class="metric-card">
-        <div class="mc-left">
-          <div class="mc-label">전체 평균 위험도</div>
-          <div class="mc-value" id="mAvgScore">65</div>
-          <div class="mc-delta up" id="mAvgDelta">+3.2</div>
-        </div>
-        <div class="mc-icon ic-risk">🌐</div>
+    <!-- Stats Strip -->
+    <div class="stats-strip" id="statsStrip">
+      <div class="stat-item">
+        <div class="stat-val danger" id="mAvgScore">68</div>
+        <div class="stat-label">전체 평균 위험도</div>
+        <div class="stat-delta up" id="mAvgDelta">+3.2</div>
       </div>
-      <div class="metric-card">
-        <div class="mc-left">
-          <div class="mc-label">고위험 지역</div>
-          <div class="mc-value" id="mHighCount">3</div>
-          <div class="mc-delta up">+1</div>
-        </div>
-        <div class="mc-icon ic-high">⚠️</div>
+      <div class="stat-item">
+        <div class="stat-val danger" id="mHighCount">3</div>
+        <div class="stat-label">고위험 지역</div>
+        <div class="stat-delta up">▲ +1</div>
       </div>
-      <div class="metric-card">
-        <div class="mc-left">
-          <div class="mc-label">활성 분쟁</div>
-          <div class="mc-value" id="mConflictCount">4</div>
-          <div class="mc-delta up">+1</div>
-        </div>
-        <div class="mc-icon ic-conflict">🔥</div>
+      <div class="stat-item">
+        <div class="stat-val warn" id="mConflictCount">4</div>
+        <div class="stat-label">활성 분쟁</div>
+        <div class="stat-delta flat">—</div>
       </div>
-      <div class="metric-card">
-        <div class="mc-left">
-          <div class="mc-label">안정 지역</div>
-          <div class="mc-value" id="mStableCount">2</div>
-          <div class="mc-delta flat">0</div>
-        </div>
-        <div class="mc-icon ic-stable">✓</div>
+      <div class="stat-item">
+        <div class="stat-val ok" id="mStableCount">2</div>
+        <div class="stat-label">안정 지역</div>
+        <div class="stat-delta down">▼ -1</div>
       </div>
     </div>
 
-    <!-- Featured Card -->
-    <div class="featured" id="featuredCard">
-      <div class="ft-header">
-        <div class="ft-region">
-          <span class="ft-flag">🌍</span>
-          <span class="ft-name" id="ftName">중동</span>
-        </div>
-        <div class="ft-score-block">
-          <div class="ft-score lv-vh" id="ftScore">92</div>
-          <div class="ft-level lv-vh" id="ftLevel">매우 높음</div>
+    <!-- Featured Event Card -->
+    <div class="sec-title">⚡ 오늘의 핵심 이슈</div>
+    <div class="featured-event" id="featuredCard">
+      <div class="fe-hero" id="feHero">
+        <img class="fe-hero-img" id="feHeroImg"
+          src="https://picsum.photos/seed/mideast-conflict/1200/500"
+          alt="featured" onload="this.classList.add('loaded')" />
+        <div class="fe-hero-grad"></div>
+        <div class="fe-hero-content">
+          <div class="fe-badges">
+            <span class="fe-risk-badge lv-vh" id="ftLevel">매우 높음</span>
+            <span class="fe-region-badge" id="ftRegionBadge">🌍 중동</span>
+            <span class="fe-trend-badge t-up" id="ftTrendBadge">↗ 상승 중</span>
+          </div>
+          <div class="fe-title" id="ftTitle">이란-이스라엘 분쟁 격화</div>
+          <div class="fe-sub" id="ftSub">호르무즈 해협 긴장 고조 · 2024년 이후 최고 수준</div>
         </div>
       </div>
-      <div class="ft-body">
-        <!-- Left: Risk Status -->
-        <div class="ft-risk-panel">
-          <div class="ft-panel-title">리스크 상태</div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">🔴</span>긴장도</div>
-            <div class="ft-row-value val-high" id="ftTension">매우 높음</div>
+      <div class="fe-body">
+        <div class="fe-panel">
+          <div class="fe-panel-lbl">리스크 상태</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">🎯</span>군사 긴장도</div>
+            <div class="fe-row-val v-high" id="ftMilitary">매우 높음</div>
           </div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">🌡️</span>안정성</div>
-            <div class="ft-row-value val-high" id="ftStability">매우 불안정</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">🏛️</span>정치 안정성</div>
+            <div class="fe-row-val v-high" id="ftPolitical">매우 불안정</div>
           </div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">📊</span>시장 영향</div>
-            <div class="ft-row-value val-high" id="ftMarket">높음</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">📊</span>시장 충격</div>
+            <div class="fe-row-val v-med" id="ftMarket">높음</div>
           </div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">📈</span>추세</div>
-            <div class="ft-row-value val-up" id="ftTrend">↗ 상승</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">📈</span>추세</div>
+            <div class="fe-row-val v-high" id="ftTrend">↗ 상승</div>
           </div>
         </div>
-        <!-- Right: Economic Sensitivity -->
-        <div class="ft-econ-panel">
-          <div class="ft-panel-title">경제 민감도</div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">⛽</span>원유</div>
-            <div class="ft-row-value val-up" id="ftOil">상승 압력</div>
+        <div class="fe-panel">
+          <div class="fe-panel-lbl">경제 민감도</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">⛽</span>원유</div>
+            <div class="fe-row-val v-high" id="ftOil">상승 압력</div>
           </div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">💡</span>반도체</div>
-            <div class="ft-row-value val-neutral" id="ftSemi">중립</div>
+          <div class="fe-row">
+            <div class="fe-row-key"><span class="fe-row-ico">💱</span>환율</div>
+            <div class="fe-row-val v-high" id="ftFx">원화 약세</div>
           </div>
-          <div class="ft-row">
-            <div class="ft-row-label"><span class="ico">💱</span>환율</div>
-            <div class="ft-row-value val-up" id="ftFx">원화 약세</div>
-          </div>
-          <div style="margin-top:14px;">
-            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;">수혜 섹터</div>
-            <div class="ft-sectors" id="ftWinners">
-              <span class="ft-chip chip-win">에너지</span><span class="ft-chip chip-win">정유</span><span class="ft-chip chip-win">방산</span>
+          <div style="margin-top:12px;">
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;font-weight:700;">▲ 수혜 섹터</div>
+            <div class="fe-chips" id="ftWinners">
+              <span class="fe-chip win">에너지</span><span class="fe-chip win">정유</span><span class="fe-chip win">방산</span>
             </div>
           </div>
           <div style="margin-top:10px;">
-            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;">위험 섹터</div>
-            <div class="ft-sectors" id="ftLosers">
-              <span class="ft-chip chip-lose">항공</span><span class="ft-chip chip-lose">물류</span><span class="ft-chip chip-lose">여행</span>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;font-weight:700;">▼ 위험 섹터</div>
+            <div class="fe-chips" id="ftLosers">
+              <span class="fe-chip lose">항공</span><span class="fe-chip lose">물류</span><span class="fe-chip lose">여행</span>
             </div>
           </div>
         </div>
       </div>
-      <div class="ft-footer">
-        <div class="ft-oneliner"><span class="ft-oneliner-icon">💡</span><span id="ftOneliner">호르무즈 해협 긴장 고조로 원유 상방 압력 지속. 국내 정유주 단기 수혜 가능, 항공주 연료비 부담 주의.</span></div>
-        <div class="ft-events" id="ftEvents">
-          <span class="ft-event-tag">이란-이스라엘 충돌</span>
-          <span class="ft-event-tag">시리아 내전</span>
-          <span class="ft-event-tag">예멘 위기</span>
-        </div>
+      <div class="fe-insight">
+        <span class="fe-insight-ico">💡</span>
+        <span id="ftOneliner">호르무즈 해협 긴장 고조로 원유 상방 압력 지속. 국내 정유주·방산주 단기 수혜 가능, 항공주 연료비 부담 주의.</span>
       </div>
     </div>
 
-    <!-- Region Grid -->
-    <div class="region-section-title">📍 지역별 위험도 현황</div>
-    <div class="region-grid" id="regionGrid">
+    <!-- Hot Issues Feed -->
+    <div class="sec-title" id="issues">🔥 지금 주목하는 이슈</div>
+    <div class="hot-grid" id="hotGrid">
 
-      <div class="region-card rc-h" onclick="selectRegion('east-asia')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🌏 동아시아</div>
-            <div class="rg-level lv-h">높음 <span class="rg-trend t-up">↗</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-h">75</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
+      <div class="hot-card" onclick="selectEvent('iran-israel')">
+        <div class="hot-img" style="background-image:url(https://picsum.photos/seed/conflict11/600/300)">
+          <span class="hot-img-tag lv-vh">매우 높음</span>
+          <span class="hot-img-trend t-up">↗ +5</span>
         </div>
-        <div class="rg-issues">
-          <div class="rg-issue">대만 해협 긴장</div>
-          <div class="rg-issue">북한 핵 문제</div>
-          <div class="rg-issue">중일 관계 악화</div>
+        <div class="hot-content">
+          <div class="hot-meta">
+            <span class="hot-region">중동</span><span class="hot-dot"></span><span class="hot-time">12분 전</span>
+          </div>
+          <div class="hot-title">이란-이스라엘 분쟁 격화</div>
+          <div class="hot-summary">호르무즈 해협 봉쇄 위협 재등장, 원유 공급 리스크 급부상</div>
         </div>
       </div>
 
-      <div class="region-card rc-vh" onclick="selectRegion('middle-east')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🌍 중동</div>
-            <div class="rg-level lv-vh">매우 높음 <span class="rg-trend t-up">↗</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-vh">92</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
+      <div class="hot-card" onclick="selectEvent('taiwan-strait')">
+        <div class="hot-img" style="background-image:url(https://picsum.photos/seed/military22/600/300)">
+          <span class="hot-img-tag lv-h">높음</span>
+          <span class="hot-img-trend t-up">↗ +3</span>
         </div>
-        <div class="rg-issues">
-          <div class="rg-issue">이란-이스라엘 충돌</div>
-          <div class="rg-issue">시리아 내전</div>
-          <div class="rg-issue">예멘 위기</div>
+        <div class="hot-content">
+          <div class="hot-meta">
+            <span class="hot-region">동아시아</span><span class="hot-dot"></span><span class="hot-time">34분 전</span>
+          </div>
+          <div class="hot-title">중국-대만 해협 군사 긴장</div>
+          <div class="hot-summary">PLA 대규모 훈련 재개, 반도체 공급망 위협 지속</div>
         </div>
       </div>
 
-      <div class="region-card rc-vh" onclick="selectRegion('east-europe')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🇺🇦 동유럽</div>
-            <div class="rg-level lv-vh">매우 높음 <span class="rg-trend t-flat">—</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-vh">88</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
+      <div class="hot-card" onclick="selectEvent('ukraine')">
+        <div class="hot-img" style="background-image:url(https://picsum.photos/seed/europe33/600/300)">
+          <span class="hot-img-tag lv-vh">매우 높음</span>
+          <span class="hot-img-trend t-flat">— 유지</span>
         </div>
-        <div class="rg-issues">
-          <div class="rg-issue">우크라이나 전쟁</div>
-          <div class="rg-issue">NATO 확장</div>
-          <div class="rg-issue">에너지 안보</div>
+        <div class="hot-content">
+          <div class="hot-meta">
+            <span class="hot-region">동유럽</span><span class="hot-dot"></span><span class="hot-time">1시간 전</span>
+          </div>
+          <div class="hot-title">러시아-우크라이나 전쟁 장기화</div>
+          <div class="hot-summary">유럽 방산 예산 GDP 3% 확대 결정, 방산주 상승 모멘텀</div>
         </div>
       </div>
 
-      <div class="region-card rc-m" onclick="selectRegion('south-asia')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🌏 남아시아</div>
-            <div class="rg-level lv-m">중간 <span class="rg-trend t-up">↗</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-m">58</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
+      <div class="hot-card" onclick="selectEvent('north-korea')">
+        <div class="hot-img" style="background-image:url(https://picsum.photos/seed/asia44/600/300)">
+          <span class="hot-img-tag lv-h">높음</span>
+          <span class="hot-img-trend t-up">↗ +2</span>
         </div>
-        <div class="rg-issues">
-          <div class="rg-issue">인도-파키스탄 카슈미르</div>
-          <div class="rg-issue">아프간 불안정</div>
-          <div class="rg-issue">미얀마 정치 위기</div>
-        </div>
-      </div>
-
-      <div class="region-card rc-h" onclick="selectRegion('africa')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🌍 아프리카</div>
-            <div class="rg-level lv-h">높음 <span class="rg-trend t-up">↗</span></div>
+        <div class="hot-content">
+          <div class="hot-meta">
+            <span class="hot-region">동아시아</span><span class="hot-dot"></span><span class="hot-time">3시간 전</span>
           </div>
-          <div>
-            <div class="rg-score lv-h">70</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
-        </div>
-        <div class="rg-issues">
-          <div class="rg-issue">수단 내전</div>
-          <div class="rg-issue">사헬 지역 불안</div>
-        </div>
-      </div>
-
-      <div class="region-card rc-m" onclick="selectRegion('latin-america')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🌎 남미</div>
-            <div class="rg-level lv-m">중간 <span class="rg-trend t-down">↘</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-m">45</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
-        </div>
-        <div class="rg-issues">
-          <div class="rg-issue">베네수엘라 정정 불안</div>
-          <div class="rg-issue">콜롬비아 치안</div>
-        </div>
-      </div>
-
-      <div class="region-card rc-l" onclick="selectRegion('north-america')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🇺🇸 북미</div>
-            <div class="rg-level lv-l">낮음 <span class="rg-trend t-flat">—</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-l">25</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
-        </div>
-        <div class="rg-issues">
-          <div class="rg-issue">미-중 전략 경쟁</div>
-          <div class="rg-issue">무역 정책 변화</div>
-        </div>
-      </div>
-
-      <div class="region-card rc-l" onclick="selectRegion('west-europe')">
-        <div class="rg-top">
-          <div class="rg-info">
-            <div class="rg-name">🇪🇺 서유럽</div>
-            <div class="rg-level lv-l">낮음 <span class="rg-trend t-down">↘</span></div>
-          </div>
-          <div>
-            <div class="rg-score lv-l">32</div>
-            <div class="rg-score-sub">위험 지수</div>
-          </div>
-        </div>
-        <div class="rg-issues">
-          <div class="rg-issue">에너지 전환 리스크</div>
-          <div class="rg-issue">방산 예산 확대</div>
+          <div class="hot-title">북한 핵·미사일 위협 재점화</div>
+          <div class="hot-summary">ICBM 발사 징후 포착, 한국 방산·안보 관련주 주목</div>
         </div>
       </div>
 
     </div>
 
-    <!-- Trend Section -->
-    <div class="trend-title">📈 위험도 추세 — 상위 5개 지역</div>
-    <div class="trend-list" id="trendList">
-      <div class="trend-row">
-        <span class="trend-rank">1</span>
-        <span class="trend-name">🌍 중동</span>
-        <div class="trend-bar"><div class="trend-bar-fill lv-vh" style="width:92%"></div></div>
-        <span class="trend-score" style="color:var(--red)">92</span>
-        <span class="trend-delta" style="color:var(--red)">▲ +5</span>
+    <!-- Compact Region Grid -->
+    <div class="sec-title" id="regions">🌍 지역별 위험도</div>
+    <div class="compact-grid" id="regionGrid">
+
+      <div class="compact-card rc-h" onclick="selectRegion('east-asia')">
+        <div class="cc-top"><div class="cc-name">🌏 동아시아</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-h">75</div><div class="cc-level">높음</div></div></div>
+        <div class="cc-event">대만 해협 긴장, 북한 위협</div>
+        <div class="cc-bar"><div class="cc-fill lv-h" style="width:75%"></div></div>
       </div>
-      <div class="trend-row">
-        <span class="trend-rank">2</span>
-        <span class="trend-name">🇺🇦 동유럽</span>
-        <div class="trend-bar"><div class="trend-bar-fill lv-vh" style="width:88%"></div></div>
-        <span class="trend-score" style="color:var(--red)">88</span>
-        <span class="trend-delta" style="color:var(--text3)">— 0</span>
+
+      <div class="compact-card rc-vh" onclick="selectRegion('middle-east')">
+        <div class="cc-top"><div class="cc-name">🌍 중동</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-vh">92</div><div class="cc-level">매우 높음</div></div></div>
+        <div class="cc-event">이란-이스라엘 충돌</div>
+        <div class="cc-bar"><div class="cc-fill lv-vh" style="width:92%"></div></div>
       </div>
-      <div class="trend-row">
-        <span class="trend-rank">3</span>
-        <span class="trend-name">🌏 동아시아</span>
-        <div class="trend-bar"><div class="trend-bar-fill lv-h" style="width:75%"></div></div>
-        <span class="trend-score" style="color:var(--orange)">75</span>
-        <span class="trend-delta" style="color:var(--red)">▲ +3</span>
+
+      <div class="compact-card rc-vh" onclick="selectRegion('east-europe')">
+        <div class="cc-top"><div class="cc-name">🇺🇦 동유럽</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-vh">88</div><div class="cc-level">매우 높음</div></div></div>
+        <div class="cc-event">우크라이나 전쟁 장기화</div>
+        <div class="cc-bar"><div class="cc-fill lv-vh" style="width:88%"></div></div>
       </div>
-      <div class="trend-row">
-        <span class="trend-rank">4</span>
-        <span class="trend-name">🌍 아프리카</span>
-        <div class="trend-bar"><div class="trend-bar-fill lv-h" style="width:70%"></div></div>
-        <span class="trend-score" style="color:var(--orange)">70</span>
-        <span class="trend-delta" style="color:var(--red)">▲ +2</span>
+
+      <div class="compact-card rc-m" onclick="selectRegion('south-asia')">
+        <div class="cc-top"><div class="cc-name">🌏 남아시아</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-m">58</div><div class="cc-level">중간</div></div></div>
+        <div class="cc-event">인도-파키스탄 긴장</div>
+        <div class="cc-bar"><div class="cc-fill lv-m" style="width:58%"></div></div>
       </div>
-      <div class="trend-row">
-        <span class="trend-rank">5</span>
-        <span class="trend-name">🌏 남아시아</span>
-        <div class="trend-bar"><div class="trend-bar-fill lv-m" style="width:58%"></div></div>
-        <span class="trend-score" style="color:var(--yellow)">58</span>
-        <span class="trend-delta" style="color:var(--red)">▲ +4</span>
+
+      <div class="compact-card rc-h" onclick="selectRegion('africa')">
+        <div class="cc-top"><div class="cc-name">🌍 아프리카</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-h">70</div><div class="cc-level">높음</div></div></div>
+        <div class="cc-event">수단 내전, 사헬 불안</div>
+        <div class="cc-bar"><div class="cc-fill lv-h" style="width:70%"></div></div>
+      </div>
+
+      <div class="compact-card rc-m" onclick="selectRegion('latin-america')">
+        <div class="cc-top"><div class="cc-name">🌎 남미</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-m">45</div><div class="cc-level">중간</div></div></div>
+        <div class="cc-event">베네수엘라 정정 불안</div>
+        <div class="cc-bar"><div class="cc-fill lv-m" style="width:45%"></div></div>
+      </div>
+
+      <div class="compact-card rc-l" onclick="selectRegion('north-america')">
+        <div class="cc-top"><div class="cc-name">🇺🇸 북미</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-l">25</div><div class="cc-level">낮음</div></div></div>
+        <div class="cc-event">미-중 전략 경쟁</div>
+        <div class="cc-bar"><div class="cc-fill lv-l" style="width:25%"></div></div>
+      </div>
+
+      <div class="compact-card rc-l" onclick="selectRegion('west-europe')">
+        <div class="cc-top"><div class="cc-name">🇪🇺 서유럽</div>
+          <div class="cc-score-wrap"><div class="cc-score lv-l">32</div><div class="cc-level">낮음</div></div></div>
+        <div class="cc-event">방산 예산 확대 논의</div>
+        <div class="cc-bar"><div class="cc-fill lv-l" style="width:32%"></div></div>
+      </div>
+
+    </div>
+
+    <!-- Community Preview -->
+    <div class="sec-title" id="community">💬 지금 뭘 보고 있나요</div>
+    <div class="comm-wrap" id="communityList">
+      <div class="comm-item">
+        <div class="comm-avatar">K</div>
+        <div class="comm-body">
+          <div class="comm-text">"중동 긴장 속 정유주 단기 매수 타이밍일까요? 이란 리스크 반영 여부가 관건인 것 같습니다"</div>
+          <div class="comm-meta"><span class="comm-vote">👍 42</span><span class="comm-tag">중동</span><span class="comm-tag">에너지</span><span>12분 전</span></div>
+        </div>
+      </div>
+      <div class="comm-item">
+        <div class="comm-avatar">J</div>
+        <div class="comm-body">
+          <div class="comm-text">"대만 리스크가 시장에 과소평가된 것 같습니다. TSMC 의존도 높은 반도체주 리스크 주의"</div>
+          <div class="comm-meta"><span class="comm-vote">👍 38</span><span class="comm-tag">동아시아</span><span class="comm-tag">반도체</span><span>28분 전</span></div>
+        </div>
+      </div>
+      <div class="comm-item">
+        <div class="comm-avatar">P</div>
+        <div class="comm-body">
+          <div class="comm-text">"유럽 방산주 아직 갈 수 있을까요? NATO GDP 3% 지출 확정이면 추가 상승 여력 있을 듯"</div>
+          <div class="comm-meta"><span class="comm-vote">👍 27</span><span class="comm-tag">동유럽</span><span class="comm-tag">방산</span><span>1시간 전</span></div>
+        </div>
+      </div>
+      <div class="comm-item">
+        <div class="comm-avatar">S</div>
+        <div class="comm-body">
+          <div class="comm-text">"원/달러 1,400 돌파 가능성? 지정학 리스크 헤지 전략으로 달러 자산 비중 늘리는 게 맞을지..."</div>
+          <div class="comm-meta"><span class="comm-vote">👍 21</span><span class="comm-tag">환율</span><span class="comm-tag">포트폴리오</span><span>2시간 전</span></div>
+        </div>
+      </div>
+      <div class="comm-write">
+        <div class="comm-input-fake">지금 주목하는 이슈를 공유하세요...</div>
       </div>
     </div>
 
-    <!-- Community Section -->
-    <div style="margin-top:32px;">
-      <div class="community-title">💬 지금 주목하는 이슈</div>
-      <div class="community-grid" id="communityGrid">
-        <div class="discussion-card">
-          <div class="disc-text">"중동 긴장 속 정유주 단기 매수 타이밍일까요?"</div>
-          <div class="disc-meta">
-            <span class="disc-vote">👍 42</span>
-            <span class="disc-tag">중동</span>
-            <span class="disc-tag">에너지</span>
-            <span>12분 전</span>
-          </div>
-        </div>
-        <div class="discussion-card">
-          <div class="disc-text">"대만 리스크가 과소평가된 것 같습니다. TSMC 의존도 주의"</div>
-          <div class="disc-meta">
-            <span class="disc-vote">👍 38</span>
-            <span class="disc-tag">동아시아</span>
-            <span class="disc-tag">반도체</span>
-            <span>28분 전</span>
-          </div>
-        </div>
-        <div class="discussion-card">
-          <div class="disc-text">"방산주 아직 갈 수 있을까? 유럽 GDP 3% 방산 지출 확정"</div>
-          <div class="disc-meta">
-            <span class="disc-vote">👍 27</span>
-            <span class="disc-tag">동유럽</span>
-            <span class="disc-tag">방산</span>
-            <span>1시간 전</span>
-          </div>
-        </div>
-        <div class="discussion-card">
-          <div class="disc-text">"원/달러 1,350 돌파 — 지정학 리스크 헤지 전략은?"</div>
-          <div class="disc-meta">
-            <span class="disc-vote">👍 21</span>
-            <span class="disc-tag">환율</span>
-            <span class="disc-tag">포트폴리오</span>
-            <span>2시간 전</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /main -->
+  </div>
+</div>
 
 <script>
-// ── Sidebar toggle ──
+function levelClass(s){return s>=90?'lv-vh':s>=70?'lv-h':s>=50?'lv-m':'lv-l';}
+function levelKo(s){return s>=90?'매우 높음':s>=70?'높음':s>=50?'중간':'낮음';}
+function cardClass(s){return s>=90?'rc-vh':s>=70?'rc-h':s>=50?'rc-m':'rc-l';}
+function trendClass(d){return d>0?'t-up':d<0?'t-down':'t-flat';}
+function trendKo(d){return d>0?'↗ 상승':d<0?'↘ 하락':'— 유지';}
+
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sbOverlay').classList.toggle('on');
@@ -587,80 +532,59 @@ function navTo(section,btn){
   document.querySelectorAll('.sb-item').forEach(function(el){el.classList.remove('active');});
   if(btn)btn.classList.add('active');
   if(window.innerWidth<=1024)toggleSidebar();
-  // Scroll to section
-  var targets={home:'metricsGrid',regions:'regionGrid',alerts:'alertBanner',trends:'trendList',community:'communityGrid'};
+  var targets={home:'statsStrip',issues:'hotGrid',alerts:'alertBanner',regions:'regionGrid',community:'communityList'};
   var el=document.getElementById(targets[section]);
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function scrollToRegion(key){
-  if(window.innerWidth<=1024)toggleSidebar();
-  selectRegion(key);
+function selectEvent(key){
+  document.getElementById('featuredCard').scrollIntoView({behavior:'smooth',block:'start'});
+  console.log('[GeoRisk] Event:',key);
 }
+function selectRegion(key){console.log('[GeoRisk] Region:',key);}
 
-// ── Clock ──
 function tick(){
-  var t=new Date().toLocaleString('ko-KR',{hour12:false,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  var el=document.getElementById('sbTime');if(el)el.textContent=t;
+  var el=document.getElementById('sbTime');
+  if(el)el.textContent=new Date().toLocaleString('ko-KR',{hour12:false,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 setInterval(tick,1000);tick();
 
-// ── Featured card region select ──
-function selectRegion(key){
-  // Scroll to featured card
-  document.getElementById('featuredCard').scrollIntoView({behavior:'smooth',block:'start'});
-  // Future: load region data via /api/region/[key]
-  console.log('[GeoWeather] Region selected:',key);
-}
-
-// ── Risk Board rendering (from API) ──
-function levelClass(score){return score>=90?'lv-vh':score>=70?'lv-h':score>=50?'lv-m':'lv-l';}
-function levelKo(score){return score>=90?'매우 높음':score>=70?'높음':score>=50?'중간':'낮음';}
-function trendStr(d){return d>0?'↗ 상승':d<0?'↘ 하락':'— 유지';}
-function trendClass(d){return d>0?'t-up':d<0?'t-down':'t-flat';}
-function cardClass(score){return score>=90?'rc-vh':score>=70?'rc-h':score>=50?'rc-m':'rc-l';}
-
 function renderRiskBoard(board){
   if(!board)return;
-  // Update gauge via existing updateGaugeColor if available
-  if(typeof updateGaugeColor==='function'){
-    updateGaugeColor(board.globalRiskIndex,board.globalRiskDelta);
-  }
-  // Update metrics
-  var avg=document.getElementById('mAvgScore');
-  if(avg)avg.textContent=board.globalRiskIndex;
-  var avgD=document.getElementById('mAvgDelta');
-  if(avgD&&board.globalRiskDelta!=null){
-    var d=board.globalRiskDelta;
-    avgD.textContent=(d>0?'+':'')+d;
-    avgD.className='mc-delta '+(d>0?'up':d<0?'down':'flat');
-  }
-  // Count high-risk regions
   var all=[].concat(board.ongoingConflicts||[],board.warRisks||[],board.globalRisks||[]);
   var high=all.filter(function(r){return r.total_score>=70;}).length;
   var conflicts=(board.ongoingConflicts||[]).length;
   var stable=all.filter(function(r){return r.total_score<40;}).length;
-  var hc=document.getElementById('mHighCount');if(hc)hc.textContent=high;
-  var cc=document.getElementById('mConflictCount');if(cc)cc.textContent=conflicts;
-  var sc=document.getElementById('mStableCount');if(sc)sc.textContent=stable;
-  var ac=document.getElementById('alertCount');if(ac)ac.textContent=high;
-
-  // Update featured card with top-1 region
+  _set('mAvgScore',board.globalRiskIndex!=null?board.globalRiskIndex:'—');
+  _set('mHighCount',high);
+  _set('mConflictCount',conflicts);
+  _set('mStableCount',stable);
+  _set('alertCount',high);
+  var avgD=document.getElementById('mAvgDelta');
+  if(avgD&&board.globalRiskDelta!=null){
+    var d=board.globalRiskDelta;
+    avgD.textContent=(d>0?'+':'')+d;
+    avgD.className='stat-delta '+(d>0?'up':d<0?'down':'flat');
+  }
   if(board.top3&&board.top3.length>0){
     var top=board.top3[0];
-    var fn=document.getElementById('ftName');if(fn)fn.textContent=top.label_ko;
-    var ff=document.querySelector('.ft-flag');if(ff)ff.textContent=top.flag_emoji;
-    var fs=document.getElementById('ftScore');if(fs){fs.textContent=top.total_score;fs.className='ft-score '+levelClass(top.total_score);}
-    var fl=document.getElementById('ftLevel');if(fl){fl.textContent=levelKo(top.total_score);fl.className='ft-level '+levelClass(top.total_score);}
-    // Risk rows
-    var ft=document.getElementById('ftTension');if(ft){ft.textContent=levelKo(top.military_score);ft.className='ft-row-value '+(top.military_score>=70?'val-high':top.military_score>=50?'val-med':'val-low');}
-    var fst=document.getElementById('ftStability');if(fst){var pScore=top.political_score;fst.textContent=pScore>=80?'매우 불안정':pScore>=60?'불안정':pScore>=40?'보통':'안정';fst.className='ft-row-value '+(pScore>=70?'val-high':pScore>=50?'val-med':'val-low');}
-    var fm=document.getElementById('ftMarket');if(fm){fm.textContent=levelKo(top.market_score);fm.className='ft-row-value '+(top.market_score>=70?'val-high':top.market_score>=50?'val-med':'val-low');}
-    var fol=document.getElementById('ftOneliner');if(fol)fol.textContent=top.summary_ko;
+    var lc=levelClass(top.total_score);
+    _set('ftTitle',top.label_ko||'—');
+    _set('ftSub',top.summary_ko||'');
+    _set('ftRegionBadge',(top.flag_emoji||'')+' '+(top.region_key||''));
+    var lvEl=document.getElementById('ftLevel');
+    if(lvEl){lvEl.textContent=levelKo(top.total_score);lvEl.className='fe-risk-badge '+lc;}
+    var trEl=document.getElementById('ftTrendBadge');
+    if(trEl){trEl.textContent=trendKo(top.delta||0);trEl.className='fe-trend-badge '+trendClass(top.delta||0);}
+    _setVal('ftMilitary',levelKo(top.military_score||50),top.military_score>=70?'v-high':top.military_score>=50?'v-med':'v-low');
+    _setVal('ftMarket',levelKo(top.market_score||50),top.market_score>=70?'v-high':top.market_score>=50?'v-med':'v-low');
+    var p=top.political_score||50;
+    _setVal('ftPolitical',p>=80?'매우 불안정':p>=60?'불안정':p>=40?'보통':'안정',p>=70?'v-high':p>=50?'v-med':'v-low');
+    _set('ftOneliner',top.summary_ko||'');
   }
 }
-
-// ── Gauge (compatibility) ──
-function updateGaugeColor(score,delta){}
+function _set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+function _setVal(id,txt,cls){var el=document.getElementById(id);if(el){el.textContent=txt;el.className='fe-row-val '+cls;}}
+function updateGaugeColor(){}
 </script>
 <script src="/api-bridge.js"></script>
 </body>
